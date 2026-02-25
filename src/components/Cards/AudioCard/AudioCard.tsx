@@ -4,36 +4,29 @@ import { View, Image, TouchableOpacity, Animated } from 'react-native';
 import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
 
-type AudioCardProps = {
-  thumbnail?: any;
-  title?: string;
-  onPress?: () => void;
-  full?: boolean;
-  author?: string;
-};
-
 const FALLBACK = require('../../../assets/images/audio_cover.png');
 
 export function AudioCard({
-  thumbnail = require('../../../assets/images/audio_cover.png'),
-  title = 'Faith, Money, Offerings & your F...',
+  thumbnail,
+  title = 'Faith, Money, Offerings & your Future...',
   onPress,
   full = false,
   author,
+  date,
+  layout = 'vertical',
 }: AudioCardProps) {
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
 
+  const isHorizontal = layout === 'horizontal';
+
   useEffect(() => {
-    // reset when thumbnail changes
     remoteOpacity.setValue(0);
     setShouldRenderRemote(false);
 
     if (!thumbnail) return;
 
-    // optional delay BEFORE we even try to show remote
     const timer = setTimeout(() => {
-      // render remote layer; fade happens when onLoad fires
       setShouldRenderRemote(true);
     }, 3000);
 
@@ -42,17 +35,22 @@ export function AudioCard({
 
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
-      <View style={[full ? styles.fullCard : styles.card]}>
-        {/* Image wrapper keeps size & radius */}
-        <View style={styles.imageWrap}>
-          {/* Fallback always visible */}
+      <View
+        style={[
+          full ? styles.fullCard : styles.card,
+          isHorizontal && styles.horizontalCard,
+        ]}
+      >
+        {/* Image */}
+        <View
+          style={[styles.imageWrap, isHorizontal && styles.horizontalImageWrap]}
+        >
           <Image
             source={FALLBACK}
             style={styles.imageFill}
             resizeMode="cover"
           />
 
-          {/* Remote fades IN over fallback (no fade-out, no blink) */}
           {shouldRenderRemote && !!thumbnail && (
             <Animated.Image
               source={{ uri: thumbnail }}
@@ -68,9 +66,25 @@ export function AudioCard({
             />
           )}
         </View>
-        <AppText variant="body" numberOfLines={2} style={styles.title}>
-          {title.slice(0, 30)} - {author}
-        </AppText>
+
+        {/* Text Section */}
+        <View style={isHorizontal && styles.horizontalTextWrap}>
+          <AppText variant="body" numberOfLines={2} style={styles.title}>
+            {title}
+          </AppText>
+
+          {author ? (
+            <AppText variant="caption" style={styles.author}>
+              {author}
+            </AppText>
+          ) : null}
+
+          {date ? (
+            <AppText variant="caption" style={styles.date}>
+              {date}
+            </AppText>
+          ) : null}
+        </View>
       </View>
     </TouchableOpacity>
   );

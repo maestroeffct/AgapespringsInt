@@ -7,6 +7,7 @@ import { AppText } from '../../../components/AppText/AppText';
 type VideoCardProps = {
   thumbnail?: string;
   title?: string;
+  date?: string;
   onPress?: () => void;
   full?: boolean;
   layout?: 'vertical' | 'horizontal';
@@ -20,6 +21,7 @@ export function VideoCard({
   onPress,
   full = false,
   layout = 'vertical',
+  date,
 }: VideoCardProps) {
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
@@ -76,6 +78,12 @@ export function VideoCard({
           <AppText variant="body" style={styles.text} numberOfLines={2}>
             {title}
           </AppText>
+
+          {date ? (
+            <AppText variant="caption" style={styles.date} numberOfLines={1}>
+              {date}
+            </AppText>
+          ) : null}
         </View>
       </View>
     </TouchableOpacity>

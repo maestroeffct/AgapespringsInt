@@ -55,4 +55,10 @@ export default StyleSheet.create({
   horizontalTextWrap: {
     flex: 1,
   },
+
+  date: {
+    marginTop: 20,
+    fontSize: 12,
+    opacity: 0.7,
+  },
 });

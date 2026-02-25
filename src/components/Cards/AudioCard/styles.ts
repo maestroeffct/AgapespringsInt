@@ -47,4 +47,31 @@ export default StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+
+  horizontalCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  horizontalImageWrap: {
+    width: 110,
+    height: 110,
+    marginRight: 12,
+  },
+
+  horizontalTextWrap: {
+    flex: 1,
+  },
+
+  author: {
+    marginTop: 10,
+    fontSize: 13,
+    opacity: 0.8,
+  },
+
+  date: {
+    marginTop: 20,
+    fontSize: 12,
+    opacity: 0.6,
+  },
 });

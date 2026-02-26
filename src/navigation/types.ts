@@ -26,5 +26,10 @@ export type RootStackParamList = {
     startIndex?: number;
   };
 
-  VideoPlayer: undefined;
+  VideoPlayer:
+    | {
+        videoId?: string;
+        title?: string;
+      }
+    | undefined;
 };

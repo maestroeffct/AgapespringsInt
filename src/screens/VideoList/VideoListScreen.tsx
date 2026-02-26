@@ -13,6 +13,10 @@ export default function VideoListScreen({ navigation }: any) {
   const { data, isLoading } = useGetTestimonyVideosQuery({
     maxResults: 50, // load more for list page
   });
+  const getVideoId = (item: any): string | undefined =>
+    item?.snippet?.resourceId?.videoId ??
+    item?.contentDetails?.videoId ??
+    item?.id?.videoId;
 
   const videoItems = data?.items ?? [];
 
@@ -32,14 +36,14 @@ export default function VideoListScreen({ navigation }: any) {
             : videoItems
         }
         keyExtractor={(item: any, index) =>
-          item?.snippet?.resourceId?.videoId ?? `placeholder-${index}`
+          getVideoId(item) ?? `placeholder-${index}`
         }
         renderItem={({ item }) => {
           if (!item?.snippet) {
             return <VideoCard full />;
           }
 
-          const videoId = item.snippet.resourceId.videoId;
+          const videoId = getVideoId(item);
           const thumbnail =
             item.snippet.thumbnails.high?.url ??
             item.snippet.thumbnails.medium?.url;
@@ -49,7 +53,12 @@ export default function VideoListScreen({ navigation }: any) {
               full
               title={item.snippet.title}
               thumbnail={thumbnail}
-              onPress={() => navigation.navigate('VideoPlayer', { videoId })}
+              onPress={() =>
+                navigation.navigate('VideoPlayer', {
+                  videoId,
+                  title: item.snippet.title,
+                })
+              }
             />
           );
         }}

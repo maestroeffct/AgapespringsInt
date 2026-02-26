@@ -4,14 +4,21 @@ import { FlatList, View } from 'react-native';
 import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
 import { useGetTestimonyVideosQuery } from '../../backend/api/youtube';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
+import { useNavigation } from '@react-navigation/native';
 
 const PLACEHOLDER_COUNT = 10;
 
 export function LivingWatersVideoTab() {
+  const navigation = useNavigation<any>();
+  const getVideoId = (item: any): string | undefined =>
+    item?.snippet?.resourceId?.videoId ??
+    item?.contentDetails?.videoId ??
+    item?.id?.videoId;
+
   const [q, setQ] = useState('');
   const { data, isLoading } = useGetTestimonyVideosQuery({ maxResults: 50 });
 
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -41,7 +48,7 @@ export function LivingWatersVideoTab() {
             : filtered
         }
         keyExtractor={(item: any, index) =>
-          item?.snippet?.resourceId?.videoId ?? `placeholder-${index}`
+          getVideoId(item) ?? `placeholder-${index}`
         }
         renderItem={({ item }) => {
           if (!item?.snippet)
@@ -53,6 +60,7 @@ export function LivingWatersVideoTab() {
               />
             );
 
+          const videoId = getVideoId(item);
           const thumbnail =
             item.snippet.thumbnails.high?.url ??
             item.snippet.thumbnails.medium?.url;
@@ -63,6 +71,12 @@ export function LivingWatersVideoTab() {
               layout="horizontal"
               title={item.snippet.title}
               thumbnail={thumbnail}
+              onPress={() =>
+                navigation.navigate('VideoPlayer', {
+                  videoId,
+                  title: item.snippet.title,
+                })
+              }
               date={
                 item.snippet.publishedAt
                   ? formatDate(item.snippet.publishedAt)

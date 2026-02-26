@@ -16,6 +16,10 @@ const PLACEHOLDER_COUNT = 10;
 
 export function LatestTabContent() {
   const navigation = useNavigation<any>();
+  const getVideoId = (item: any): string | undefined =>
+    item?.snippet?.resourceId?.videoId ??
+    item?.contentDetails?.videoId ??
+    item?.id?.videoId;
 
   const { data: videoData, isLoading: videosLoading } =
     useGetTestimonyVideosQuery({
@@ -55,18 +59,22 @@ export function LatestTabContent() {
               <VideoCard key={`video-placeholder-${i}`} />
             ))
           : videoItems.map((item: any) => {
-              const videoId = item?.snippet?.resourceId?.videoId;
+              const videoId = getVideoId(item);
               const thumbnail =
                 item?.snippet?.thumbnails?.high?.url ??
                 item?.snippet?.thumbnails?.medium?.url;
+              const cardKey = videoId ?? item?.snippet?.title;
 
               return (
                 <VideoCard
-                  key={videoId}
+                  key={cardKey}
                   title={item?.snippet?.title}
                   thumbnail={thumbnail}
                   onPress={() =>
-                    navigation.navigate('VideoPlayer', { videoId })
+                    navigation.navigate('VideoPlayer', {
+                      videoId,
+                      title: item?.snippet?.title,
+                    })
                   }
                 />
               );
@@ -115,18 +123,22 @@ export function LatestTabContent() {
               <TestimonyCard key={`testimony-placeholder-${i}`} />
             ))
           : testimonyItems.map((item: any) => {
-              const videoId = item?.snippet?.resourceId?.videoId;
+              const videoId = getVideoId(item);
               const thumbnail =
                 item?.snippet?.thumbnails?.high?.url ??
                 item?.snippet?.thumbnails?.medium?.url;
+              const cardKey = videoId ?? item?.snippet?.title;
 
               return (
                 <TestimonyCard
-                  key={videoId}
+                  key={cardKey}
                   title={item?.snippet?.title}
                   thumbnail={thumbnail}
                   onPress={() =>
-                    navigation.navigate('VideoPlayer', { videoId })
+                    navigation.navigate('VideoPlayer', {
+                      videoId,
+                      title: item?.snippet?.title,
+                    })
                   }
                 />
               );

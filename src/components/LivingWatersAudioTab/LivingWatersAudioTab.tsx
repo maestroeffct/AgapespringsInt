@@ -8,6 +8,8 @@ import {
 } from '../../backend/api/hooks/useAudioSermon';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useNavigation } from '@react-navigation/native';
+import type { AudioQueueItem } from '../../navigation/types';
 
 const PLACEHOLDER_COUNT = 10;
 const PAGE_SIZE = 20;
@@ -17,6 +19,7 @@ export function LivingWatersAudioTab() {
   const [q, setQ] = useState('');
   const trimmedQuery = q.trim();
   const isSearching = trimmedQuery.length > 0;
+  const navigation = useNavigation<any>();
 
   const baseQuery = useInfiniteAudioSermon(PAGE_SIZE);
   const searchQuery = useInfiniteAudioSermonSearch(trimmedQuery, PAGE_SIZE);
@@ -26,6 +29,17 @@ export function LivingWatersAudioTab() {
   const items = useMemo(
     () => activeQuery.data?.pages.flatMap(page => page) ?? [],
     [activeQuery.data],
+  );
+  const queueItems = useMemo<AudioQueueItem[]>(
+    () =>
+      items.map(item => ({
+        id: String(item.id),
+        audioUrl: item.audio_url,
+        title: item.title,
+        author: item.author,
+        artwork: item.thumbnail_url,
+      })),
+    [items],
   );
 
   function formatDate(dateString?: string) {
@@ -50,9 +64,11 @@ export function LivingWatersAudioTab() {
       />
 
       <FlatList
-        data={showPlaceholders ? Array.from({ length: PLACEHOLDER_COUNT }) : items}
+        data={
+          showPlaceholders ? Array.from({ length: PLACEHOLDER_COUNT }) : items
+        }
         keyExtractor={(item: any, index) => item?.id ?? `placeholder-${index}`}
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           if (!item?.id) return <AudioCard full layout="horizontal" />;
 
           return (
@@ -63,6 +79,17 @@ export function LivingWatersAudioTab() {
               author={item.author}
               thumbnail={item.thumbnail_url}
               date={formatDate(item.time_posted)}
+              onPress={() =>
+                navigation.navigate('AudioPlayer', {
+                  id: item.id,
+                  audioUrl: item.audio_url,
+                  title: item.title,
+                  author: item.author,
+                  artwork: item.thumbnail_url,
+                  queue: queueItems,
+                  startIndex: index,
+                })
+              }
             />
           );
         }}

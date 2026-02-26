@@ -7,6 +7,7 @@ import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
 import { AudioCard } from '../../components/Cards/AudioCard/AudioCard';
 import { TestimonyCard } from '../../components/Cards/TestimonyCard.tsx/TestimonyCard';
 import { useNavigation } from '@react-navigation/native';
+import type { AudioQueueItem } from '../../navigation/types';
 
 import { useGetTestimonyVideosQuery } from '../../backend/api/youtube';
 import { useAudioSermon } from '../../backend/api/hooks/useAudioSermon';
@@ -30,6 +31,14 @@ export function LatestTabContent() {
   const { data: audioData, isLoading: audiosLoading } = useAudioSermon();
 
   const audioItems = audioData ?? [];
+  const displayedAudioItems = audioItems.slice(0, PLACEHOLDER_COUNT);
+  const audioQueue = displayedAudioItems.map<AudioQueueItem>(item => ({
+    id: String(item.id),
+    audioUrl: item.audio_url,
+    title: item.title,
+    author: item.author,
+    artwork: item.thumbnail_url,
+  }));
 
   return (
     <>
@@ -74,7 +83,7 @@ export function LatestTabContent() {
           ? Array.from({ length: PLACEHOLDER_COUNT }).map((_, i) => (
               <AudioCard key={`audio-placeholder-${i}`} />
             ))
-          : audioItems.slice(0, PLACEHOLDER_COUNT).map(item => (
+          : displayedAudioItems.map((item, index) => (
               <AudioCard
                 key={item.id}
                 title={item.title}
@@ -87,6 +96,8 @@ export function LatestTabContent() {
                     title: item.title,
                     author: item.author,
                     artwork: item.thumbnail_url,
+                    queue: audioQueue,
+                    startIndex: index,
                   })
                 }
               />

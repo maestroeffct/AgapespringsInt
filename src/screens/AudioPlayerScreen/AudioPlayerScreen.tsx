@@ -15,15 +15,18 @@ import {
   Share,
   Alert,
   Animated,
+  Modal,
+  ScrollView,
 } from 'react-native';
 
 import TrackPlayer, {
-  Capability,
   RepeatMode,
   State,
+  useActiveTrack,
   usePlaybackState,
   useProgress,
 } from 'react-native-track-player';
+import type { Track } from 'react-native-track-player';
 
 import Slider from '@react-native-community/slider';
 import LinearGradient from 'react-native-linear-gradient';
@@ -32,6 +35,8 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 
 import { AppText } from '../../components/AppText/AppText';
 import { getItem, setItem, StorageKeys } from '../../helpers/storage';
+import { ensureTrackPlayerSetup } from '../../player/ensureTrackPlayerSetup';
+import type { AudioQueueItem } from '../../navigation/types';
 
 type AudioPlayerParams = {
   audioUrl?: string;
@@ -39,12 +44,16 @@ type AudioPlayerParams = {
   author?: string;
   artwork?: string;
   id?: string; // unique id for favorites/download name
+  queue?: AudioQueueItem[];
+  startIndex?: number;
 };
 
 // Temporary local toggle for UI testing without navigation params.
 const USE_DUMMY_AUDIO = false;
 
-const DUMMY_AUDIO: Required<AudioPlayerParams> = {
+const DUMMY_AUDIO: Required<
+  Pick<AudioPlayerParams, 'id' | 'audioUrl' | 'title' | 'author' | 'artwork'>
+> = {
   id: 'dummy-1',
   audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
   title: 'Dummy Audio Title',
@@ -65,23 +74,86 @@ function formatTime(seconds: number) {
 }
 
 function safeFilename(name: string) {
-  return name.replace(/[\/\\?%*:|"<>]/g, '-').trim();
+  return name.replace(/[/?%*:|"<>\\]/g, '-').trim();
 }
 
 export default function AudioPlayerScreen({ route, navigation }: any) {
   const routeParams: AudioPlayerParams = route?.params ?? {};
 
-  const data = USE_DUMMY_AUDIO
-    ? DUMMY_AUDIO
-    : {
-        id: routeParams.id ?? routeParams.audioUrl ?? 'audio',
-        audioUrl: routeParams.audioUrl ?? DUMMY_AUDIO.audioUrl,
-        title: routeParams.title ?? DUMMY_AUDIO.title,
-        author: routeParams.author ?? DUMMY_AUDIO.author,
-        artwork: routeParams.artwork ?? DUMMY_AUDIO.artwork,
-      };
+  const fallbackTrack = useMemo<AudioQueueItem>(
+    () =>
+      USE_DUMMY_AUDIO
+        ? {
+            id: DUMMY_AUDIO.id,
+            audioUrl: DUMMY_AUDIO.audioUrl,
+            title: DUMMY_AUDIO.title,
+            author: DUMMY_AUDIO.author,
+            artwork: DUMMY_AUDIO.artwork,
+          }
+        : {
+            id: String(routeParams.id ?? routeParams.audioUrl ?? 'audio'),
+            audioUrl: routeParams.audioUrl ?? DUMMY_AUDIO.audioUrl,
+            title: routeParams.title ?? DUMMY_AUDIO.title,
+            author: routeParams.author ?? DUMMY_AUDIO.author,
+            artwork: routeParams.artwork ?? DUMMY_AUDIO.artwork,
+          },
+    [
+      routeParams.id,
+      routeParams.audioUrl,
+      routeParams.title,
+      routeParams.author,
+      routeParams.artwork,
+    ],
+  );
 
-  const { id, audioUrl, title, author, artwork } = data;
+  const incomingQueue = useMemo<AudioQueueItem[]>(() => {
+    const fromParams = Array.isArray(routeParams.queue)
+      ? routeParams.queue.filter(item => item?.audioUrl)
+      : [];
+
+    if (fromParams.length > 0) {
+      return fromParams.map((item, index) => ({
+        id: String(item.id ?? `audio-${index}`),
+        audioUrl: item.audioUrl,
+        title: item.title,
+        author: item.author,
+        artwork: item.artwork,
+      }));
+    }
+
+    return [fallbackTrack];
+  }, [routeParams.queue, fallbackTrack]);
+
+  const initialQueueIndex = useMemo(() => {
+    const queueSize = incomingQueue.length;
+    if (queueSize <= 1) return 0;
+
+    const paramIndex = routeParams.startIndex;
+    if (typeof paramIndex === 'number' && Number.isFinite(paramIndex)) {
+      return Math.min(Math.max(0, Math.floor(paramIndex)), queueSize - 1);
+    }
+
+    const routeId = routeParams.id ? String(routeParams.id) : undefined;
+    if (routeId) {
+      const foundIndex = incomingQueue.findIndex(item => item.id === routeId);
+      if (foundIndex >= 0) return foundIndex;
+    }
+
+    return 0;
+  }, [incomingQueue, routeParams.startIndex, routeParams.id]);
+
+  const activeTrack = useActiveTrack();
+  const activeId = String(activeTrack?.id ?? fallbackTrack.id);
+  const activeAudioUrl =
+    typeof activeTrack?.url === 'string'
+      ? activeTrack.url
+      : fallbackTrack.audioUrl;
+  const activeTitle = activeTrack?.title ?? fallbackTrack.title ?? 'Audio';
+  const activeAuthor = activeTrack?.artist ?? fallbackTrack.author ?? '';
+  const activeArtwork =
+    typeof activeTrack?.artwork === 'string'
+      ? activeTrack.artwork
+      : fallbackTrack.artwork;
 
   const playbackState = usePlaybackState();
   const progress = useProgress(250); // updates every 250ms
@@ -98,12 +170,17 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
   const [downloadedPath, setDownloadedPath] = useState<string | null>(null);
   const artworkOpacity = useRef(new Animated.Value(0)).current;
   const [showRemoteArtwork, setShowRemoteArtwork] = useState(false);
+  const [queueVisible, setQueueVisible] = useState(false);
+  const [queueTracks, setQueueTracks] = useState<Track[]>([]);
+  const [activeQueueIndex, setActiveQueueIndex] = useState<number | null>(null);
+  const [loadingQueue, setLoadingQueue] = useState(false);
 
   // waveform animation
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const hasRemoteArtwork =
-    typeof artwork === 'string' &&
-    (artwork.startsWith('http://') || artwork.startsWith('https://'));
+    typeof activeArtwork === 'string' &&
+    (activeArtwork.startsWith('http://') ||
+      activeArtwork.startsWith('https://'));
 
   const bars = useMemo(() => {
     // deterministic “fake waveform” bars
@@ -116,38 +193,39 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
   }, []);
 
   const setup = useCallback(async () => {
-    // Setup only once per screen entry
-    await TrackPlayer.setupPlayer();
-
-    await TrackPlayer.updateOptions({
-      capabilities: [
-        Capability.Play,
-        Capability.Pause,
-        Capability.SeekTo,
-        Capability.SkipToNext,
-        Capability.SkipToPrevious,
-      ],
-      compactCapabilities: [Capability.Play, Capability.Pause],
-    });
+    // Setup player + queue for the route that opened this screen.
+    await ensureTrackPlayerSetup();
 
     await TrackPlayer.reset();
 
-    await TrackPlayer.add({
-      id: String(id),
-      url: audioUrl,
-      title: title,
-      artist: author,
-      artwork: artwork,
-    });
+    const tracks: Track[] = incomingQueue.map((item, index) => ({
+      id: String(item.id ?? `audio-${index}`),
+      url: item.audioUrl,
+      title: item.title,
+      artist: item.author,
+      artwork: item.artwork,
+    }));
+    await TrackPlayer.add(tracks);
+
+    if (initialQueueIndex > 0) {
+      await TrackPlayer.skip(initialQueueIndex);
+    }
 
     await TrackPlayer.setRepeatMode(RepeatMode.Off);
 
+    setActiveQueueIndex(initialQueueIndex);
     setRepeatMode(RepeatMode.Off);
     setReady(true);
-  }, [audioUrl, title, author, artwork, id]);
+  }, [incomingQueue, initialQueueIndex]);
 
   useEffect(() => {
-    setup();
+    setup().catch(error => {
+      console.error('AudioPlayer setup failed:', error);
+      Alert.alert(
+        'Audio Player Error',
+        'Unable to initialize player. Please try again.',
+      );
+    });
   }, [setup]);
 
   useEffect(() => {
@@ -156,7 +234,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
     if (!hasRemoteArtwork) return;
     setShowRemoteArtwork(true);
-  }, [artwork, hasRemoteArtwork, artworkOpacity]);
+  }, [activeArtwork, hasRemoteArtwork, artworkOpacity]);
 
   // Load favorite state
   useEffect(() => {
@@ -165,9 +243,9 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         StorageKeys.FAVORITES,
       )) as Record<string, boolean> | null;
 
-      setIsFav(!!favMap?.[String(id)]);
+      setIsFav(!!favMap?.[activeId]);
     })();
-  }, [id]);
+  }, [activeId]);
 
   // Animate waveform fill smoothly based on progress ratio
   useEffect(() => {
@@ -216,7 +294,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
     const map = { ...(prev ?? {}) };
     const next = !isFav;
-    map[String(id)] = next;
+    map[activeId] = next;
 
     setIsFav(next);
     await setItem(StorageKeys.FAVORITES, map);
@@ -225,19 +303,19 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
   const doShare = async () => {
     try {
       await Share.share({
-        message: `${title}\n${author ?? ''}\n${audioUrl}`,
+        message: `${activeTitle}\n${activeAuthor}\n${activeAudioUrl}`,
       });
     } catch {}
   };
 
   const downloadAudio = async () => {
-    if (!audioUrl) return;
+    if (!activeAudioUrl) return;
     if (downloading) return;
 
     try {
       setDownloading(true);
 
-      const fileName = safeFilename(`${title || 'audio'}.mp3`);
+      const fileName = safeFilename(`${activeTitle || 'audio'}.mp3`);
       const dir = RNFS.DocumentDirectoryPath + '/downloads'; // app sandbox downloads
       const path = `${dir}/${fileName}`;
 
@@ -253,7 +331,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       }
 
       const task = RNFS.downloadFile({
-        fromUrl: audioUrl,
+        fromUrl: activeAudioUrl,
         toFile: path,
       });
 
@@ -269,6 +347,35 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       Alert.alert('Download failed', e?.message ?? 'Unknown error');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const openQueueList = async () => {
+    try {
+      setLoadingQueue(true);
+      await ensureTrackPlayerSetup();
+      const [queue, activeIndex] = await Promise.all([
+        TrackPlayer.getQueue(),
+        TrackPlayer.getActiveTrackIndex(),
+      ]);
+      setQueueTracks(queue);
+      setActiveQueueIndex(typeof activeIndex === 'number' ? activeIndex : null);
+      setQueueVisible(true);
+    } catch (e: any) {
+      Alert.alert('Queue failed', e?.message ?? 'Unable to open queue.');
+    } finally {
+      setLoadingQueue(false);
+    }
+  };
+
+  const playFromQueue = async (index: number) => {
+    try {
+      await TrackPlayer.skip(index);
+      await TrackPlayer.play();
+      setActiveQueueIndex(index);
+      setQueueVisible(false);
+    } catch (e: any) {
+      Alert.alert('Play failed', e?.message ?? 'Unable to play this track.');
     }
   };
 
@@ -316,10 +423,10 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         {/* Title */}
         <View style={styles.headerText}>
           <AppText style={styles.title} numberOfLines={2}>
-            {title}
+            {activeTitle}
           </AppText>
           <AppText style={styles.author} numberOfLines={1}>
-            {author}
+            {activeAuthor}
           </AppText>
         </View>
 
@@ -328,7 +435,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
           <Image source={LOCAL_COVER_ARTWORK} style={styles.cover} />
           {showRemoteArtwork ? (
             <Animated.Image
-              source={{ uri: artwork }}
+              source={{ uri: activeArtwork as string }}
               style={[
                 styles.cover,
                 styles.coverOverlay,
@@ -448,6 +555,15 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
               {downloading ? 'Downloading' : 'Download'}
             </AppText>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.95}
+            style={styles.actionBtn}
+            onPress={openQueueList}
+          >
+            <Ionicons name="list-outline" size={22} color="#fff" />
+            <AppText style={styles.actionLabel}>Queue</AppText>
+          </TouchableOpacity>
         </View>
 
         {/* Transport controls */}
@@ -491,6 +607,77 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+
+      <Modal
+        visible={queueVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setQueueVisible(false)}
+      >
+        <View style={styles.queueRoot}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.queueBackdrop}
+            onPress={() => setQueueVisible(false)}
+          />
+
+          <View style={styles.queueSheet}>
+            <View style={styles.queueHeader}>
+              <AppText style={styles.queueTitle}>Now Playing Queue</AppText>
+              <TouchableOpacity
+                activeOpacity={0.95}
+                onPress={() => setQueueVisible(false)}
+              >
+                <Ionicons name="close" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
+
+            {loadingQueue ? (
+              <AppText style={styles.queueMeta}>Loading queue...</AppText>
+            ) : queueTracks.length === 0 ? (
+              <AppText style={styles.queueMeta}>Queue is empty.</AppText>
+            ) : (
+              <ScrollView
+                style={styles.queueList}
+                contentContainerStyle={styles.queueListContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {queueTracks.map((track, index) => {
+                  const isActive = index === activeQueueIndex;
+                  return (
+                    <TouchableOpacity
+                      key={`${String(track.id ?? index)}-${index}`}
+                      activeOpacity={0.95}
+                      style={[
+                        styles.queueItem,
+                        isActive ? styles.queueItemActive : null,
+                      ]}
+                      onPress={() => playFromQueue(index)}
+                    >
+                      <View style={styles.queueItemTextWrap}>
+                        <AppText
+                          style={styles.queueItemTitle}
+                          numberOfLines={1}
+                        >
+                          {track.title ?? 'Untitled Track'}
+                        </AppText>
+                        <AppText style={styles.queueItemArtist} numberOfLines={1}>
+                          {track.artist ?? 'Unknown Artist'}
+                        </AppText>
+                      </View>
+                      {isActive ? (
+                        <Ionicons name="volume-high" size={18} color="#FFD700" />
+                      ) : (
+                        <Ionicons name="play-outline" size={18} color="#fff" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }
@@ -633,5 +820,75 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 11,
     fontWeight: '700',
+  },
+
+  queueRoot: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  queueBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  queueSheet: {
+    maxHeight: '65%',
+    backgroundColor: '#111111',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingTop: 14,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  queueHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  queueTitle: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  queueMeta: {
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 16,
+  },
+  queueList: {
+    width: '100%',
+  },
+  queueListContent: {
+    paddingBottom: 10,
+    gap: 10,
+  },
+  queueItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  queueItemActive: {
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    backgroundColor: 'rgba(255,215,0,0.12)',
+  },
+  queueItemTextWrap: {
+    flex: 1,
+    marginRight: 12,
+  },
+  queueItemTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  queueItemArtist: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 12,
+    marginTop: 3,
   },
 });

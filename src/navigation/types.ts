@@ -1,3 +1,11 @@
+export type AudioQueueItem = {
+  id: string;
+  audioUrl: string;
+  title?: string;
+  author?: string;
+  artwork?: string;
+};
+
 export type RootStackParamList = {
   Splash: undefined;
   Onboarding: undefined;
@@ -8,5 +16,13 @@ export type RootStackParamList = {
   AudioList: undefined;
   TestimonyList: undefined;
 
-  AudioPlayer: undefined;
+  AudioPlayer: {
+    id?: string;
+    audioUrl?: string;
+    title?: string;
+    author?: string;
+    artwork?: string;
+    queue?: AudioQueueItem[];
+    startIndex?: number;
+  };
 };

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, TouchableOpacity, Share, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, Share, Image, Modal } from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerContentComponentProps,
@@ -12,6 +12,7 @@ import styles from './styles';
 
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const { theme, isDark, mode, setMode } = useTheme();
+  const [themeSheetVisible, setThemeSheetVisible] = useState(false);
   const logo = isDark
     ? require('../../assets/images/logo_white.png')
     : require('../../assets/images/logo_name.png');
@@ -21,20 +22,6 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
       message:
         'Download AgapeSprings App and stay connected with sermons and devotionals.',
     });
-  };
-
-  const cycleThemeMode = () => {
-    if (mode === 'system') {
-      setMode('light');
-      return;
-    }
-
-    if (mode === 'light') {
-      setMode('dark');
-      return;
-    }
-
-    setMode('system');
   };
 
   const readableMode =
@@ -87,7 +74,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         <DrawerItem
           icon="color-palette-outline"
           label={`App Theme · ${readableMode}`}
-          onPress={cycleThemeMode}
+          onPress={() => setThemeSheetVisible(true)}
           theme={theme}
         />
 
@@ -102,6 +89,65 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
         <AppText style={styles.version}>Version 1.2.0</AppText>
       </DrawerContentScrollView>
+
+      <Modal
+        transparent
+        animationType="fade"
+        visible={themeSheetVisible}
+        onRequestClose={() => setThemeSheetVisible(false)}
+      >
+        <View style={styles.sheetRoot}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.sheetBackdrop}
+            onPress={() => setThemeSheetVisible(false)}
+          />
+
+          <View
+            style={[
+              styles.sheetCard,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
+            <AppText
+              style={[styles.sheetTitle, { color: theme.colors.textPrimary }]}
+            >
+              Select App Theme
+            </AppText>
+
+            <ThemeOption
+              label="System"
+              active={mode === 'system'}
+              onPress={() => {
+                setMode('system');
+                setThemeSheetVisible(false);
+              }}
+              theme={theme}
+            />
+            <ThemeOption
+              label="Light"
+              active={mode === 'light'}
+              onPress={() => {
+                setMode('light');
+                setThemeSheetVisible(false);
+              }}
+              theme={theme}
+            />
+            <ThemeOption
+              label="Dark"
+              active={mode === 'dark'}
+              onPress={() => {
+                setMode('dark');
+                setThemeSheetVisible(false);
+              }}
+              theme={theme}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -120,6 +166,29 @@ function DrawerItem({ icon, label, onPress, theme }: any) {
         size={18}
         color={theme.colors.textSecondary}
       />
+    </TouchableOpacity>
+  );
+}
+
+function ThemeOption({ label, active, onPress, theme }: any) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={[
+        styles.themeOption,
+        {
+          borderColor: active ? theme.colors.primary : theme.colors.border,
+          backgroundColor: active
+            ? `${theme.colors.primary}20`
+            : theme.colors.background,
+        },
+      ]}
+      onPress={onPress}
+    >
+      <AppText style={{ color: theme.colors.textPrimary }}>{label}</AppText>
+      {active ? (
+        <Ionicons name="checkmark-circle" size={18} color={theme.colors.primary} />
+      ) : null}
     </TouchableOpacity>
   );
 }

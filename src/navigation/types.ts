@@ -7,4 +7,6 @@ export type RootStackParamList = {
   VideoList: undefined;
   AudioList: undefined;
   TestimonyList: undefined;
+
+  AudioPlayer: undefined;
 };

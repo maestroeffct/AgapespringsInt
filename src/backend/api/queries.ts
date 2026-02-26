@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 
 import { apiGet } from './client';
 import { queryKeys } from './keys';
@@ -64,23 +64,60 @@ type AudioSermonSearchParams = {
   size?: number;
 };
 
+const DEFAULT_AUDIO_PAGE_SIZE = 20;
+
+const mapAudioSermonItem = (item: AudioSermonApiItem): AudioSermonItem => ({
+  id: String(item.id),
+  title: item.title,
+  author: item.author,
+  audio_url: item.audioUrl,
+  thumbnail_url: item.thumbnailUrl,
+  time_posted: item.timePosted,
+});
+
+const fetchAudioSermonPage = async (
+  page: number,
+): Promise<AudioSermonItem[]> => {
+  const res = await apiGet<AudioSermonApiResponse>(
+    `/admin/audioSermon/files/${page}`,
+  );
+
+  return res.data.map(mapAudioSermonItem);
+};
+
+const fetchAudioSermonSearchPage = async (
+  query: string,
+  page: number,
+  size: number,
+): Promise<AudioSermonItem[]> => {
+  const encodedQuery = encodeURIComponent(query);
+  const endpoint = `/audioSermon/search/${encodedQuery}/${page}/${size}`;
+  const res = await apiGet<AudioSermonApiResponse>(endpoint);
+
+  return res.data.map(mapAudioSermonItem);
+};
+
 export const audioSermonQueryOptions = () =>
   queryOptions({
     queryKey: queryKeys.latestAudios,
     queryFn: async (): Promise<AudioSermonItem[]> => {
-      const res = await apiGet<AudioSermonApiResponse>(
-        '/admin/audioSermon/files/1',
-      );
-
-      return res.data.map(item => ({
-        id: String(item.id),
-        title: item.title,
-        author: item.author,
-        audio_url: item.audioUrl,
-        thumbnail_url: item.thumbnailUrl,
-        time_posted: item.timePosted,
-      }));
+      return fetchAudioSermonPage(1);
     },
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+  });
+
+export const audioSermonInfiniteQueryOptions = (
+  size = DEFAULT_AUDIO_PAGE_SIZE,
+) =>
+  infiniteQueryOptions({
+    queryKey: queryKeys.latestAudiosInfinite(size),
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => fetchAudioSermonPage(pageParam),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === 0 ? undefined : allPages.length + 1,
     staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
     refetchOnMount: false,
@@ -90,26 +127,33 @@ export const audioSermonQueryOptions = () =>
 export const audioSermonSearchQueryOptions = ({
   query,
   page = 1,
-  size = 20,
+  size = DEFAULT_AUDIO_PAGE_SIZE,
 }: AudioSermonSearchParams) => {
   const trimmedQuery = query.trim();
 
   return queryOptions({
     queryKey: queryKeys.audioSearch(trimmedQuery, page, size),
-    queryFn: async (): Promise<AudioSermonItem[]> => {
-      const encodedQuery = encodeURIComponent(trimmedQuery);
-      const endpoint = `/audioSermon/search/${encodedQuery}/${page}/${size}`;
-      const res = await apiGet<AudioSermonApiResponse>(endpoint);
+    queryFn: () => fetchAudioSermonSearchPage(trimmedQuery, page, size),
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 10,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+  });
+};
 
-      return res.data.map(item => ({
-        id: String(item.id),
-        title: item.title,
-        author: item.author,
-        audio_url: item.audioUrl,
-        thumbnail_url: item.thumbnailUrl,
-        time_posted: item.timePosted,
-      }));
-    },
+export const audioSermonSearchInfiniteQueryOptions = ({
+  query,
+  size = DEFAULT_AUDIO_PAGE_SIZE,
+}: Omit<AudioSermonSearchParams, 'page'>) => {
+  const trimmedQuery = query.trim();
+
+  return infiniteQueryOptions({
+    queryKey: queryKeys.audioSearchInfinite(trimmedQuery, size),
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      fetchAudioSermonSearchPage(trimmedQuery, pageParam, size),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < size ? undefined : allPages.length + 1,
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 10,
     refetchOnMount: false,

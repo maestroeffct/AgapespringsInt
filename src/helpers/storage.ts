@@ -13,6 +13,7 @@ export const StorageKeys = {
   ONBOARDING_DONE: 'ONBOARDING_DONE',
   APP_THEME: 'APP_THEME',
   QUERY_CACHE: 'QUERY_CACHE',
+  FAVORITES: 'FAVORITES',
 } as const;
 
 export type StorageKey = keyof typeof StorageKeys;

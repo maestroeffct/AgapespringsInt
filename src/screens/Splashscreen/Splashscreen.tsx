@@ -17,7 +17,7 @@ export function SplashScreen({ navigation }: Props) {
     }, 5000); // 5 seconds
 
     return () => clearTimeout(timer); // cleanup
-  }, []);
+  }, [navigation]);
 
   return (
     <ScreenWrapper padded={false}>

@@ -9,6 +9,7 @@ import { AppDrawerNavigator } from './AppDrawerNavigator';
 import VideoListScreen from '../screens/VideoList/VideoListScreen';
 import AudioListScreen from '../screens/AudioList/AudioListScreen';
 import TestimonyListScreen from '../screens/TestimonyList/TestimonyListScreen';
+import AudioPlayerScreen from '../screens/AudioPlayerScreen/AudioPlayerScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -29,6 +30,7 @@ export function RootNavigator() {
         <Stack.Screen name="VideoList" component={VideoListScreen} />
         <Stack.Screen name="AudioList" component={AudioListScreen} />
         <Stack.Screen name="TestimonyList" component={TestimonyListScreen} />
+        <Stack.Screen name="AudioPlayer" component={AudioPlayerScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

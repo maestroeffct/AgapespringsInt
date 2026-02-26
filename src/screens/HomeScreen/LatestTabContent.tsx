@@ -82,8 +82,11 @@ export function LatestTabContent() {
                 thumbnail={item.thumbnail_url}
                 onPress={() =>
                   navigation.navigate('AudioPlayer', {
+                    id: item.id,
                     audioUrl: item.audio_url,
                     title: item.title,
+                    author: item.author,
+                    artwork: item.thumbnail_url,
                   })
                 }
               />

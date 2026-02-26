@@ -1,20 +1,37 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { ActivityIndicator, FlatList, View } from 'react-native';
 
 import { AudioCard } from '../../components/Cards/AudioCard/AudioCard';
-import { useAudioSermon } from '../../backend/api/hooks/useAudioSermon';
+import {
+  useInfiniteAudioSermon,
+  useInfiniteAudioSermonSearch,
+} from '../../backend/api/hooks/useAudioSermon';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
+import { useTheme } from '../../theme/ThemeProvider';
 
 const PLACEHOLDER_COUNT = 10;
+const PAGE_SIZE = 20;
 
 export function LivingWatersAudioTab() {
+  const { theme } = useTheme();
   const [q, setQ] = useState('');
-  const { data, isLoading } = useAudioSermon();
+  const trimmedQuery = q.trim();
+  const isSearching = trimmedQuery.length > 0;
 
-  const items = data ?? [];
+  const baseQuery = useInfiniteAudioSermon(PAGE_SIZE);
+  const searchQuery = useInfiniteAudioSermonSearch(trimmedQuery, PAGE_SIZE);
 
-  function formatDate(dateString: string) {
+  const activeQuery = isSearching ? searchQuery : baseQuery;
+
+  const items = useMemo(
+    () => activeQuery.data?.pages.flatMap(page => page) ?? [],
+    [activeQuery.data],
+  );
+
+  function formatDate(dateString?: string) {
+    if (!dateString) return undefined;
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return undefined;
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -22,15 +39,7 @@ export function LivingWatersAudioTab() {
     });
   }
 
-  const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return items;
-    return items.filter(it => {
-      const title = (it.title ?? '').toLowerCase();
-      const author = (it.author ?? '').toLowerCase();
-      return title.includes(s) || author.includes(s);
-    });
-  }, [q, items]);
+  const showPlaceholders = activeQuery.isLoading && items.length === 0;
 
   return (
     <View style={{ flex: 1 }}>
@@ -41,11 +50,7 @@ export function LivingWatersAudioTab() {
       />
 
       <FlatList
-        data={
-          isLoading && items.length === 0
-            ? Array.from({ length: PLACEHOLDER_COUNT })
-            : filtered
-        }
+        data={showPlaceholders ? Array.from({ length: PLACEHOLDER_COUNT }) : items}
         keyExtractor={(item: any, index) => item?.id ?? `placeholder-${index}`}
         renderItem={({ item }) => {
           if (!item?.id) return <AudioCard full layout="horizontal" />;
@@ -57,10 +62,27 @@ export function LivingWatersAudioTab() {
               title={item.title}
               author={item.author}
               thumbnail={item.thumbnail_url}
-              date={item.time_posted ? formatDate(item.time_posted) : undefined}
+              date={formatDate(item.time_posted)}
             />
           );
         }}
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (
+            activeQuery.hasNextPage &&
+            !activeQuery.isFetchingNextPage &&
+            !activeQuery.isLoading
+          ) {
+            activeQuery.fetchNextPage();
+          }
+        }}
+        ListFooterComponent={
+          activeQuery.isFetchingNextPage ? (
+            <View style={{ paddingVertical: 16 }}>
+              <ActivityIndicator color={theme.colors.primary} />
+            </View>
+          ) : null
+        }
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}
       />

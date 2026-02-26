@@ -1,11 +1,12 @@
-import { View, Text } from 'react-native';
+import { Text } from 'react-native';
 import React from 'react';
+import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 
 const DevotionalScreen = () => {
   return (
-    <View>
+    <ScreenWrapper>
       <Text>DevotionalScreen</Text>
-    </View>
+    </ScreenWrapper>
   );
 };
 

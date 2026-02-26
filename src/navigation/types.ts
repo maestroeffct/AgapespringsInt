@@ -25,4 +25,6 @@ export type RootStackParamList = {
     queue?: AudioQueueItem[];
     startIndex?: number;
   };
+
+  VideoPlayer: undefined;
 };

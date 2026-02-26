@@ -18,6 +18,8 @@ import AudioPlayerScreen from '../screens/AudioPlayerScreen/AudioPlayerScreen';
 import { View } from 'react-native';
 import { MiniPlayer } from '../components/MiniPlayer/MiniPlayer';
 import TrackPlayer from 'react-native-track-player';
+import NotificationsScreen from '../screens/NotificationsScreen/NotificationScreen';
+import VideoPlayerScreen from '../screens/VideoPlayerScreen/VideoPlayerScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 type NavState = NavigationState | PartialState<NavigationState> | undefined;
@@ -122,8 +124,6 @@ export function RootNavigator() {
             animation: 'fade',
           }}
         >
-          {/* <Stack.Screen name="Notifications" component={NotificationsScreen} /> */}
-
           <Stack.Screen name="Splash" component={SplashScreen} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="Main" component={AppDrawerNavigator} />
@@ -131,6 +131,8 @@ export function RootNavigator() {
           <Stack.Screen name="AudioList" component={AudioListScreen} />
           <Stack.Screen name="TestimonyList" component={TestimonyListScreen} />
           <Stack.Screen name="AudioPlayer" component={AudioPlayerScreen} />
+          <Stack.Screen name="VideoPlayer" component={VideoPlayerScreen} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
 

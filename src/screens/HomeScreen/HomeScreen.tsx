@@ -9,14 +9,12 @@ import { SegmentedTabs } from '../../components/SegmentedTabs/SegmentedTabs';
 import { LatestTabContent } from './LatestTabContent';
 import { ResourcesTabContent } from './ResourcesTabContent';
 import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh';
-import { LatestSkeleton } from './LatestSkeleton';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../backend/api/keys';
 
 export default function HomeScreen() {
   const [tab, setTab] = useState<'latest' | 'resources'>('latest');
-  const [refreshing, setRefreshing] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -36,24 +34,28 @@ export default function HomeScreen() {
           { key: 'resources', label: 'Resources' },
         ]}
       />
-      <PullToRefresh
-        onRefresh={async () => {
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: queryKeys.carousel }),
-            queryClient.invalidateQueries({ queryKey: queryKeys.latestVideos }),
-            queryClient.invalidateQueries({ queryKey: queryKeys.latestAudios }),
-            queryClient.invalidateQueries({ queryKey: queryKeys.testimonies }),
-          ]);
-        }}
-      >
-        <View style={{ display: tab === 'latest' ? 'flex' : 'none' }}>
-          {refreshing ? <LatestSkeleton /> : <LatestTabContent />}
-        </View>
-
-        <View style={{ display: tab === 'resources' ? 'flex' : 'none' }}>
+      {tab === 'latest' ? (
+        <PullToRefresh
+          onRefresh={async () => {
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: queryKeys.carousel }),
+              queryClient.invalidateQueries({
+                queryKey: queryKeys.latestVideos,
+              }),
+              queryClient.invalidateQueries({
+                queryKey: queryKeys.latestAudios,
+              }),
+              queryClient.invalidateQueries({ queryKey: queryKeys.testimonies }),
+            ]);
+          }}
+        >
+          <LatestTabContent />
+        </PullToRefresh>
+      ) : (
+        <View style={{ flex: 1 }}>
           <ResourcesTabContent />
         </View>
-      </PullToRefresh>
+      )}
     </ScreenWrapper>
   );
 }

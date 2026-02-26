@@ -2,8 +2,8 @@ import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
-import { AppText } from '@/components/AppText/AppText';
-import { useTheme } from '@/theme/ThemeProvider';
+import { AppText } from '../../components/AppText/AppText';
+import { useTheme } from '../../theme/ThemeProvider';
 import styles from './styles';
 
 type Props = {

@@ -1,8 +1,14 @@
 import React from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import {
+  createDrawerNavigator,
+  // DrawerContentScrollView,
+  // DrawerItem,
+} from '@react-navigation/drawer';
 
 import { AppTabNavigator } from './AppTabNavigator';
 import { useTheme } from '../theme/ThemeProvider';
+
+import { CustomDrawerContent } from './CustomDrawerContent/CustomDrawerContent';
 
 export type DrawerParamList = {
   Tabs: undefined;
@@ -24,6 +30,7 @@ export function AppDrawerNavigator() {
           backgroundColor: theme.colors.background,
         },
       }}
+      drawerContent={props => <CustomDrawerContent {...props} />}
     >
       <Drawer.Screen name="Tabs" component={AppTabNavigator} />
     </Drawer.Navigator>

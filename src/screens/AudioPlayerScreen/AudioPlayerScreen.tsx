@@ -48,19 +48,6 @@ type AudioPlayerParams = {
   startIndex?: number;
 };
 
-// Temporary local toggle for UI testing without navigation params.
-const USE_DUMMY_AUDIO = false;
-
-const DUMMY_AUDIO: Required<
-  Pick<AudioPlayerParams, 'id' | 'audioUrl' | 'title' | 'author' | 'artwork'>
-> = {
-  id: 'dummy-1',
-  audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-  title: 'Dummy Audio Title',
-  author: 'Dummy Author',
-  artwork: 'https://picsum.photos/700/700',
-};
-
 const LOCAL_BACKGROUND = require('../../assets/images/audio_cover.png');
 const LOCAL_COVER_ARTWORK = require('../../assets/images/audio_cover.png');
 
@@ -81,22 +68,13 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
   const routeParams: AudioPlayerParams = route?.params ?? {};
 
   const fallbackTrack = useMemo<AudioQueueItem>(
-    () =>
-      USE_DUMMY_AUDIO
-        ? {
-            id: DUMMY_AUDIO.id,
-            audioUrl: DUMMY_AUDIO.audioUrl,
-            title: DUMMY_AUDIO.title,
-            author: DUMMY_AUDIO.author,
-            artwork: DUMMY_AUDIO.artwork,
-          }
-        : {
-            id: String(routeParams.id ?? routeParams.audioUrl ?? 'audio'),
-            audioUrl: routeParams.audioUrl ?? DUMMY_AUDIO.audioUrl,
-            title: routeParams.title ?? DUMMY_AUDIO.title,
-            author: routeParams.author ?? DUMMY_AUDIO.author,
-            artwork: routeParams.artwork ?? DUMMY_AUDIO.artwork,
-          },
+    () => ({
+      id: String(routeParams.id ?? routeParams.audioUrl ?? 'audio'),
+      audioUrl: routeParams.audioUrl ?? '',
+      title: routeParams.title ?? 'Audio',
+      author: routeParams.author ?? '',
+      artwork: routeParams.artwork,
+    }),
     [
       routeParams.id,
       routeParams.audioUrl,
@@ -121,7 +99,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       }));
     }
 
-    return [fallbackTrack];
+    return fallbackTrack.audioUrl ? [fallbackTrack] : [];
   }, [routeParams.queue, fallbackTrack]);
 
   const initialQueueIndex = useMemo(() => {
@@ -195,6 +173,12 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
   const setup = useCallback(async () => {
     // Setup player + queue for the route that opened this screen.
     await ensureTrackPlayerSetup();
+
+    if (incomingQueue.length === 0) {
+      setReady(false);
+      Alert.alert('Audio Player', 'No audio source was provided for playback.');
+      return;
+    }
 
     await TrackPlayer.reset();
 

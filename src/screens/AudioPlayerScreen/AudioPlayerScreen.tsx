@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Share,
   Alert,
   Animated,
   Modal,
@@ -50,6 +49,9 @@ type AudioPlayerParams = {
 
 const LOCAL_BACKGROUND = require('../../assets/images/audio_cover.png');
 const LOCAL_COVER_ARTWORK = require('../../assets/images/audio_cover.png');
+const MIN_PLAYBACK_RATE = 0.5;
+const MAX_PLAYBACK_RATE = 2;
+const PLAYBACK_RATE_STEP = 0.25;
 
 function formatTime(seconds: number) {
   const s = Math.max(0, Math.floor(seconds));
@@ -62,6 +64,22 @@ function formatTime(seconds: number) {
 
 function safeFilename(name: string) {
   return name.replace(/[/?%*:|"<>\\]/g, '-').trim();
+}
+
+function queuesAreSame(existingQueue: Track[], incomingQueue: Track[]) {
+  if (existingQueue.length !== incomingQueue.length) return false;
+
+  return existingQueue.every((existingTrack, index) => {
+    const incomingTrack = incomingQueue[index];
+    const existingId = String(existingTrack?.id ?? '');
+    const incomingId = String(incomingTrack?.id ?? '');
+    const existingUrl =
+      typeof existingTrack?.url === 'string' ? existingTrack.url : '';
+    const incomingUrl =
+      typeof incomingTrack?.url === 'string' ? incomingTrack.url : '';
+
+    return existingId === incomingId && existingUrl === incomingUrl;
+  });
 }
 
 export default function AudioPlayerScreen({ route, navigation }: any) {
@@ -139,6 +157,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
   // Repeat: off -> one -> all
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(RepeatMode.Off);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   // Favorite
   const [isFav, setIsFav] = useState(false);
@@ -180,8 +199,6 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       return;
     }
 
-    await TrackPlayer.reset();
-
     const tracks: Track[] = incomingQueue.map((item, index) => ({
       id: String(item.id ?? `audio-${index}`),
       url: item.audioUrl,
@@ -189,6 +206,36 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       artist: item.author,
       artwork: item.artwork,
     }));
+
+    const [existingQueue, existingActiveIndex, currentRepeatMode, currentRate] =
+      await Promise.all([
+        TrackPlayer.getQueue(),
+        TrackPlayer.getActiveTrackIndex(),
+        TrackPlayer.getRepeatMode().catch(() => RepeatMode.Off),
+        TrackPlayer.getRate().catch(() => 1),
+      ]);
+
+    const hasSameQueue = queuesAreSame(existingQueue, tracks);
+
+    if (hasSameQueue) {
+      const currentIndex =
+        typeof existingActiveIndex === 'number' ? existingActiveIndex : 0;
+
+      if (currentIndex !== initialQueueIndex && initialQueueIndex >= 0) {
+        await TrackPlayer.skip(initialQueueIndex);
+      }
+
+      const latestIndex = await TrackPlayer.getActiveTrackIndex();
+      setActiveQueueIndex(
+        typeof latestIndex === 'number' ? latestIndex : initialQueueIndex,
+      );
+      setRepeatMode(currentRepeatMode);
+      setPlaybackRate(currentRate);
+      setReady(true);
+      return;
+    }
+
+    await TrackPlayer.reset();
     await TrackPlayer.add(tracks);
 
     if (initialQueueIndex > 0) {
@@ -196,9 +243,11 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
     }
 
     await TrackPlayer.setRepeatMode(RepeatMode.Off);
+    await TrackPlayer.setRate(1);
 
     setActiveQueueIndex(initialQueueIndex);
     setRepeatMode(RepeatMode.Off);
+    setPlaybackRate(1);
     setReady(true);
   }, [incomingQueue, initialQueueIndex]);
 
@@ -252,11 +301,19 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
     else await TrackPlayer.play();
   };
 
-  const seekBy = async (delta: number) => {
-    const pos = await TrackPlayer.getPosition();
-    const dur = await TrackPlayer.getDuration();
-    const next = Math.min(Math.max(0, pos + delta), Math.max(0, dur));
-    await TrackPlayer.seekTo(next);
+  const changePlaybackRate = async (delta: number) => {
+    const nextRate = Math.min(
+      MAX_PLAYBACK_RATE,
+      Math.max(
+        MIN_PLAYBACK_RATE,
+        Math.round((playbackRate + delta) * 100) / 100,
+      ),
+    );
+
+    if (nextRate === playbackRate) return;
+
+    setPlaybackRate(nextRate);
+    await TrackPlayer.setRate(nextRate);
   };
 
   const cycleRepeat = async () => {
@@ -282,14 +339,6 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
     setIsFav(next);
     await setItem(StorageKeys.FAVORITES, map);
-  };
-
-  const doShare = async () => {
-    try {
-      await Share.share({
-        message: `${activeTitle}\n${activeAuthor}\n${activeAudioUrl}`,
-      });
-    } catch {}
   };
 
   const downloadAudio = async () => {
@@ -399,8 +448,8 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.95} onPress={doShare}>
-            <Ionicons name="share-social-outline" size={22} color="#fff" />
+          <TouchableOpacity activeOpacity={0.95} onPress={openQueueList}>
+            <Ionicons name="list-outline" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -539,30 +588,24 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
               {downloading ? 'Downloading' : 'Download'}
             </AppText>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.95}
-            style={styles.actionBtn}
-            onPress={openQueueList}
-          >
-            <Ionicons name="list-outline" size={22} color="#fff" />
-            <AppText style={styles.actionLabel}>Queue</AppText>
-          </TouchableOpacity>
         </View>
 
         {/* Transport controls */}
         <View style={styles.controls}>
-          <TouchableOpacity activeOpacity={0.95} onPress={() => seekBy(-30)}>
+          <TouchableOpacity
+            activeOpacity={0.95}
+            onPress={() => TrackPlayer.skipToPrevious().catch(() => {})}
+          >
             <Ionicons name="play-skip-back" size={30} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.95}
-            onPress={() => seekBy(-10)}
-            style={styles.seekBtn}
+            onPress={() => changePlaybackRate(-PLAYBACK_RATE_STEP)}
+            style={styles.speedBtn}
           >
             <Ionicons name="play-back" size={28} color="#fff" />
-            <AppText style={styles.seekText}>10</AppText>
+            <AppText style={styles.speedLabel}>Slower</AppText>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -579,17 +622,23 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
           <TouchableOpacity
             activeOpacity={0.95}
-            onPress={() => seekBy(10)}
-            style={styles.seekBtn}
+            onPress={() => changePlaybackRate(PLAYBACK_RATE_STEP)}
+            style={styles.speedBtn}
           >
             <Ionicons name="play-forward" size={28} color="#fff" />
-            <AppText style={styles.seekText}>10</AppText>
+            <AppText style={styles.speedLabel}>Faster</AppText>
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.95} onPress={() => seekBy(30)}>
+          <TouchableOpacity
+            activeOpacity={0.95}
+            onPress={() => TrackPlayer.skipToNext().catch(() => {})}
+          >
             <Ionicons name="play-skip-forward" size={30} color="#fff" />
           </TouchableOpacity>
         </View>
+        <AppText style={styles.rateLabel}>
+          Playback Speed: {Number(playbackRate.toFixed(2))}x
+        </AppText>
       </SafeAreaView>
 
       <Modal
@@ -791,19 +840,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  seekBtn: {
+  speedBtn: {
     width: 54,
-    height: 54,
-    borderRadius: 27,
+    height: 66,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 2,
   },
-  seekText: {
-    position: 'absolute',
-    bottom: 6,
+  speedLabel: {
     color: '#fff',
     fontSize: 11,
-    fontWeight: '700',
+  },
+  rateLabel: {
+    marginTop: 8,
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
+    textAlign: 'center',
   },
 
   queueRoot: {

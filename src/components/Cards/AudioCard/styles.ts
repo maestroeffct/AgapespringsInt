@@ -36,6 +36,7 @@ export default StyleSheet.create({
     borderRadius: 10,
     overflow: 'hidden',
     marginBottom: 8,
+    backgroundColor: '#111827',
   },
 
   imageFill: {

@@ -22,15 +22,7 @@ export function AudioCard({
 
   useEffect(() => {
     remoteOpacity.setValue(0);
-    setShouldRenderRemote(false);
-
-    if (!thumbnail) return;
-
-    const timer = setTimeout(() => {
-      setShouldRenderRemote(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
+    setShouldRenderRemote(!!thumbnail);
   }, [thumbnail, remoteOpacity]);
 
   return (
@@ -51,7 +43,7 @@ export function AudioCard({
             resizeMode="cover"
           />
 
-          {shouldRenderRemote && !!thumbnail && (
+          {shouldRenderRemote && thumbnail ? (
             <Animated.Image
               source={{ uri: thumbnail }}
               style={[styles.imageFill, { opacity: remoteOpacity }]}
@@ -63,8 +55,11 @@ export function AudioCard({
                   useNativeDriver: true,
                 }).start();
               }}
+              onError={() => {
+                setShouldRenderRemote(false);
+              }}
             />
-          )}
+          ) : null}
         </View>
 
         {/* Text Section */}

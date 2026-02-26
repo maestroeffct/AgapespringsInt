@@ -65,6 +65,7 @@ type AudioSermonSearchParams = {
 };
 
 const DEFAULT_AUDIO_PAGE_SIZE = 20;
+const DEFAULT_ONESOUND_PAGE_SIZE = 20;
 
 const mapAudioSermonItem = (item: AudioSermonApiItem): AudioSermonItem => ({
   id: String(item.id),
@@ -141,6 +142,52 @@ export const audioSermonSearchQueryOptions = ({
   });
 };
 
+type OneSoundApiItem = {
+  id: number;
+  title: string;
+  artist: string;
+  lyrics: string;
+  audioUrl: string;
+  coverUrl: string;
+  createdAt: string;
+};
+
+type OneSoundApiResponse = {
+  success: boolean;
+  data: OneSoundApiItem[];
+};
+
+export type OneSoundItem = {
+  id: string;
+  title: string;
+  artist: string;
+  author: string;
+  lyrics: string;
+  audio_url: string;
+  cover_url: string;
+  created_at: string;
+};
+
+const mapOneSoundItem = (item: OneSoundApiItem): OneSoundItem => ({
+  id: String(item.id),
+  title: item.title,
+  artist: item.artist,
+  author: item.artist,
+  lyrics: item.lyrics,
+  audio_url: item.audioUrl,
+  cover_url: item.coverUrl,
+  created_at: item.createdAt,
+});
+
+const fetchOneSoundPage = async (
+  page: number,
+  size: number,
+): Promise<OneSoundItem[]> => {
+  const res = await apiGet<OneSoundApiResponse>(`/oneSound/files/${page}/${size}`);
+
+  return res.data.map(mapOneSoundItem);
+};
+
 export const audioSermonSearchInfiniteQueryOptions = ({
   query,
   size = DEFAULT_AUDIO_PAGE_SIZE,
@@ -161,10 +208,36 @@ export const audioSermonSearchInfiniteQueryOptions = ({
   });
 };
 
+export const oneSoundQueryOptions = (size = DEFAULT_ONESOUND_PAGE_SIZE) =>
+  queryOptions({
+    queryKey: queryKeys.oneSound(size),
+    queryFn: async (): Promise<OneSoundItem[]> => fetchOneSoundPage(1, size),
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+  });
+
+export const oneSoundInfiniteQueryOptions = (
+  size = DEFAULT_ONESOUND_PAGE_SIZE,
+) =>
+  infiniteQueryOptions({
+    queryKey: queryKeys.oneSoundInfinite(size),
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => fetchOneSoundPage(pageParam, size),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length < size ? undefined : allPages.length + 1,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+  });
+
 /**
  * Add any new API query options here so they are prefetched at startup.
  */
 export const startupQueryOptions = [
   carouselQueryOptions,
   audioSermonQueryOptions,
+  oneSoundQueryOptions,
 ];

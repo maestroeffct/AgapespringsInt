@@ -16,6 +16,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 30,
   },
+  footerLoader: {
+    paddingVertical: 16,
+  },
 });
 
 export default styles;

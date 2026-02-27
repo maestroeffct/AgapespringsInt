@@ -18,6 +18,27 @@ export type CarouselItem = {
   file_path: string;
 };
 
+type ChurchLocationApiItem = {
+  id: number;
+  name: string;
+  address: string;
+  phone: string;
+  mapUrl: string;
+};
+
+type ChurchLocationApiResponse = {
+  success: boolean;
+  data: ChurchLocationApiItem[];
+};
+
+export type ChurchLocationItem = {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  map_url: string;
+};
+
 export const carouselQueryOptions = () =>
   queryOptions({
     queryKey: queryKeys.carousel,
@@ -27,6 +48,26 @@ export const carouselQueryOptions = () =>
       return res.data.map(item => ({
         id: String(item.id),
         file_path: item.url,
+      }));
+    },
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+  });
+
+export const churchLocationsQueryOptions = () =>
+  queryOptions({
+    queryKey: queryKeys.churchLocations,
+    queryFn: async (): Promise<ChurchLocationItem[]> => {
+      const res = await apiGet<ChurchLocationApiResponse>('/location/list');
+
+      return (res.data ?? []).map(item => ({
+        id: String(item.id),
+        name: item.name,
+        address: item.address,
+        phone: item.phone ?? '',
+        map_url: item.mapUrl ?? '',
       }));
     },
     staleTime: 1000 * 60 * 10,
@@ -240,4 +281,5 @@ export const startupQueryOptions = [
   carouselQueryOptions,
   audioSermonQueryOptions,
   oneSoundQueryOptions,
+  churchLocationsQueryOptions,
 ];

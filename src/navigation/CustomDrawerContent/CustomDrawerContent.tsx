@@ -64,7 +64,10 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         <DrawerItem
           icon="location-outline"
           label="Church Locator"
-          onPress={() => {}}
+          onPress={() => {
+            props.navigation.closeDrawer();
+            props.navigation.navigate('ChurchLocator');
+          }}
           theme={theme}
         />
 

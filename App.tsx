@@ -39,7 +39,7 @@ const App = () => {
           let attempts = 0;
 
           while (!apnsToken && attempts < 8) {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise<void>(resolve => setTimeout(resolve, 500));
             apnsToken = await messaging().getAPNSToken();
             attempts += 1;
           }

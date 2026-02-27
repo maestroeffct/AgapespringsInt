@@ -1,16 +1,12 @@
 import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ThemeProvider } from './src/theme/ThemeProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 import { store } from './src/utils/store';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import {
-  getFcmToken,
-  listenToTokenRefresh,
-  requestPushPermission,
-} from './src/notifications/push';
-
+import messaging from '@react-native-firebase/messaging';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -24,27 +20,53 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // useEffect(() => {
-  //   (async () => {
-  //     const allowed = await requestPushPermission();
-  //     if (!allowed) return;
+  useEffect(() => {
+    const setup = async () => {
+      try {
+        await messaging().registerDeviceForRemoteMessages();
+        const authStatus = await messaging().requestPermission();
+        const isAuthorized =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
-  //     const token = await getFcmToken();
-  //     if (token) {
-  //       // TODO: send token to your backend and save under userId/vendorId/riderId
-  //       console.log('FCM token:', token);
-  //     }
-  //   })();
+        if (!isAuthorized) {
+          console.log('Push permission not granted.');
+          return;
+        }
 
-  //   const unsubRefresh = listenToTokenRefresh(t => {
-  //     // TODO: send updated token to backend
-  //     console.log('FCM token refreshed:', t);
-  //   });
+        if (Platform.OS === 'ios') {
+          let apnsToken = await messaging().getAPNSToken();
+          let attempts = 0;
 
-  //   return () => {
-  //     unsubRefresh();
-  //   };
-  // }, []);
+          while (!apnsToken && attempts < 8) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            apnsToken = await messaging().getAPNSToken();
+            attempts += 1;
+          }
+
+          if (!apnsToken) {
+            console.log(
+              'APNs token not available yet (simulator or APNs not configured). Skipping FCM token fetch.',
+            );
+            return;
+          }
+        }
+
+        const token = await messaging().getToken();
+        console.log('FCM TOKEN:', token);
+      } catch (error) {
+        console.log('Push setup error:', error);
+      }
+    };
+
+    setup();
+
+    const unsub = messaging().onTokenRefresh(t => {
+      console.log('FCM TOKEN REFRESH:', t);
+    });
+
+    return unsub;
+  }, []);
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>

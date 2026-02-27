@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
@@ -34,31 +34,62 @@ export default function HomeScreen() {
           { key: 'resources', label: 'Resources' },
         ]}
       />
-      {tab === 'latest' ? (
-        <PullToRefresh
-          onRefresh={async () => {
-            await Promise.all([
-              queryClient.invalidateQueries({ queryKey: queryKeys.carousel }),
-              queryClient.invalidateQueries({
-                queryKey: queryKeys.latestVideos,
-              }),
-              queryClient.invalidateQueries({
-                queryKey: queryKeys.latestAudios,
-              }),
-              queryClient.invalidateQueries({ queryKey: queryKeys.testimonies }),
-            ]);
-          }}
+      <View style={styles.contentHost}>
+        <View
+          style={styles.layer}
+          pointerEvents={tab === 'latest' ? 'auto' : 'none'}
         >
-          <LatestTabContent />
-        </PullToRefresh>
-      ) : (
-        <View style={{ flex: 1 }}>
-          <ResourcesTabContent />
+          <View style={tab === 'latest' ? styles.visible : styles.hidden}>
+            <PullToRefresh
+              onRefresh={async () => {
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: queryKeys.carousel }),
+                  queryClient.invalidateQueries({
+                    queryKey: queryKeys.latestVideos,
+                  }),
+                  queryClient.invalidateQueries({
+                    queryKey: queryKeys.latestAudios,
+                  }),
+                  queryClient.invalidateQueries({
+                    queryKey: queryKeys.testimonies,
+                  }),
+                ]);
+              }}
+            >
+              <LatestTabContent />
+            </PullToRefresh>
+          </View>
         </View>
-      )}
+
+        <View
+          style={styles.layer}
+          pointerEvents={tab === 'resources' ? 'auto' : 'none'}
+        >
+          <View style={tab === 'resources' ? styles.visible : styles.hidden}>
+            <ResourcesTabContent />
+          </View>
+        </View>
+      </View>
     </ScreenWrapper>
   );
 }
+
+const styles = StyleSheet.create({
+  contentHost: {
+    flex: 1,
+  },
+  layer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  visible: {
+    flex: 1,
+    opacity: 1,
+  },
+  hidden: {
+    flex: 1,
+    opacity: 0,
+  },
+});
 
 // <PullToRefresh
 //   contentContainerStyle={styles.content}

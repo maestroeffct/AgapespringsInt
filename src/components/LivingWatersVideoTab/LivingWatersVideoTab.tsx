@@ -1,14 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { ActivityIndicator, FlatList, View } from 'react-native';
 
 import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
 import { useGetTestimonyVideosQuery } from '../../backend/api/youtube';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
 import { useNavigation } from '@react-navigation/native';
-
-const PLACEHOLDER_COUNT = 10;
+import { useTheme } from '../../theme/ThemeProvider';
 
 export function LivingWatersVideoTab() {
+  const { theme } = useTheme();
   const navigation = useNavigation<any>();
   const getVideoId = (item: any): string | undefined =>
     item?.snippet?.resourceId?.videoId ??
@@ -41,53 +41,52 @@ export function LivingWatersVideoTab() {
     <View style={{ flex: 1 }}>
       <SearchBar value={q} onChangeText={setQ} placeholder="Search videos..." />
 
-      <FlatList
-        data={
-          isLoading && items.length === 0
-            ? Array.from({ length: PLACEHOLDER_COUNT })
-            : filtered
-        }
-        keyExtractor={(item: any, index) =>
-          getVideoId(item) ?? `placeholder-${index}`
-        }
-        renderItem={({ item }) => {
-          if (!item?.snippet)
+      {isLoading && items.length === 0 ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item: any, index) =>
+            getVideoId(item) ?? `video-${index}`
+          }
+          renderItem={({ item }) => {
+            const videoId = getVideoId(item);
+            const thumbnail =
+              item.snippet.thumbnails.high?.url ??
+              item.snippet.thumbnails.medium?.url;
+
             return (
               <VideoCard
                 full
                 layout="horizontal"
-                thumbnail={require('../../assets/images/video_cover.png')}
+                title={item.snippet.title}
+                thumbnail={thumbnail}
+                onPress={() =>
+                  navigation.navigate('VideoPlayer', {
+                    videoId,
+                    title: item.snippet.title,
+                  })
+                }
+                date={
+                  item.snippet.publishedAt
+                    ? formatDate(item.snippet.publishedAt)
+                    : undefined
+                }
               />
             );
-
-          const videoId = getVideoId(item);
-          const thumbnail =
-            item.snippet.thumbnails.high?.url ??
-            item.snippet.thumbnails.medium?.url;
-
-          return (
-            <VideoCard
-              full
-              layout="horizontal"
-              title={item.snippet.title}
-              thumbnail={thumbnail}
-              onPress={() =>
-                navigation.navigate('VideoPlayer', {
-                  videoId,
-                  title: item.snippet.title,
-                })
-              }
-              date={
-                item.snippet.publishedAt
-                  ? formatDate(item.snippet.publishedAt)
-                  : undefined
-              }
-            />
-          );
-        }}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-        showsVerticalScrollIndicator={false}
-      />
+          }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }

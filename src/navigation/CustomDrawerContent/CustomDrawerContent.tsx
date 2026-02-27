@@ -74,7 +74,10 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         <DrawerItem
           icon="albums-outline"
           label="Platforms"
-          onPress={() => {}}
+          onPress={() => {
+            props.navigation.closeDrawer();
+            props.navigation.navigate('Platforms');
+          }}
           theme={theme}
         />
 

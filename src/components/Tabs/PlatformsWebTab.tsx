@@ -1,6 +1,7 @@
 import React from 'react';
 import { FlatList } from 'react-native';
 import { PlatformRow } from '../../components/PlatformRow/PlatformRow';
+import { useTheme } from '../../theme/ThemeProvider';
 
 const WEB_ITEMS = [
   {
@@ -21,10 +22,17 @@ const WEB_ITEMS = [
 ];
 
 export function PlatformsWebTab() {
+  const { theme } = useTheme();
+
   return (
     <FlatList
       data={WEB_ITEMS}
       keyExtractor={it => it.title}
+      style={{ backgroundColor: theme.colors.background }}
+      contentContainerStyle={{
+        backgroundColor: theme.colors.background,
+        flexGrow: 1,
+      }}
       renderItem={({ item }) => (
         <PlatformRow
           title={item.title}

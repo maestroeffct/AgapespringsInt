@@ -23,10 +23,13 @@ export default function PlatformsScreen({ navigation }: any) {
         onLeftPress={() => navigation.goBack()}
       />
 
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <Tab.Navigator
           screenOptions={{
             swipeEnabled: true,
+            sceneStyle: {
+              backgroundColor: theme.colors.background,
+            },
             tabBarActiveTintColor: theme.colors.primary,
             tabBarInactiveTintColor: theme.colors.textSecondary,
             tabBarIndicatorStyle: {

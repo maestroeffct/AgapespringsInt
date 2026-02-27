@@ -9,10 +9,13 @@ import { AppTabNavigator } from './AppTabNavigator';
 import { useTheme } from '../theme/ThemeProvider';
 
 import { CustomDrawerContent } from './CustomDrawerContent/CustomDrawerContent';
+import WebScreen from '../screens/WebScreen/WebScreen';
 
 export type DrawerParamList = {
   Tabs: undefined;
   Notifications: undefined;
+  AboutWeb: undefined;
+  GiveWeb: undefined;
 };
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
@@ -33,6 +36,24 @@ export function AppDrawerNavigator() {
       drawerContent={props => <CustomDrawerContent {...props} />}
     >
       <Drawer.Screen name="Tabs" component={AppTabNavigator} />
+      <Drawer.Screen
+        name="AboutWeb"
+        component={WebScreen}
+        initialParams={{
+          title: 'About Us',
+          url: 'https://www.agapespringsint.com/about',
+        }}
+        options={{drawerItemStyle: {display: 'none'}}}
+      />
+      <Drawer.Screen
+        name="GiveWeb"
+        component={WebScreen}
+        initialParams={{
+          title: 'Give - Agapesprings',
+          url: 'https://www.agapespringsint.com/give',
+        }}
+        options={{drawerItemStyle: {display: 'none'}}}
+      />
     </Drawer.Navigator>
   );
 }

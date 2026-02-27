@@ -44,14 +44,20 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         <DrawerItem
           icon="information-circle-outline"
           label="About Us"
-          onPress={() => {}}
+          onPress={() => {
+            props.navigation.closeDrawer();
+            props.navigation.navigate('AboutWeb');
+          }}
           theme={theme}
         />
 
         <DrawerItem
           icon="gift-outline"
           label="Give"
-          onPress={() => {}}
+          onPress={() => {
+            props.navigation.closeDrawer();
+            props.navigation.navigate('GiveWeb');
+          }}
           theme={theme}
         />
 
@@ -187,7 +193,11 @@ function ThemeOption({ label, active, onPress, theme }: any) {
     >
       <AppText style={{ color: theme.colors.textPrimary }}>{label}</AppText>
       {active ? (
-        <Ionicons name="checkmark-circle" size={18} color={theme.colors.primary} />
+        <Ionicons
+          name="checkmark-circle"
+          size={18}
+          color={theme.colors.primary}
+        />
       ) : null}
     </TouchableOpacity>
   );

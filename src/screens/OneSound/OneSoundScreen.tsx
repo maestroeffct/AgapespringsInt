@@ -1,5 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  View,
+} from 'react-native';
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 import styles from './styles';
 import { AudioCard } from '../../components/Cards/AudioCard/AudioCard';
@@ -61,8 +66,14 @@ export default function OneSoundScreen({ navigation }: any) {
 
   return (
     <ScreenWrapper padded={false}>
-      <AppHeader showLogo onLeftPress={() => navigation.openDrawer()} />
-
+      <AppHeader
+        showLogo
+        onLeftPress={() => navigation.openDrawer()}
+        rightType="icon"
+        rightIconName="save"
+        rightIconSize={22}
+        onRightPress={() => {}}
+      />
       <SearchBar
         value={search}
         onChangeText={setSearch}
@@ -124,7 +135,6 @@ export default function OneSoundScreen({ navigation }: any) {
           }}
         />
       )}
-
     </ScreenWrapper>
   );
 }

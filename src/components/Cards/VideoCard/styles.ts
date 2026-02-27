@@ -14,7 +14,7 @@ export default StyleSheet.create({
   },
 
   text: {
-    fontWeight: '400',
+    fontWeight: '600',
   },
 
   fullCard: {

@@ -28,6 +28,7 @@ export default StyleSheet.create({
 
   title: {
     textAlign: 'left',
+    fontWeight: '600',
   },
 
   imageWrap: {

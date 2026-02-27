@@ -20,6 +20,8 @@ export function AppHeader({
   onLeftPress,
 
   rightType = 'notification',
+  rightIconName = 'notifications-outline',
+  rightIconSize = 24,
   badgeCount = 0,
   onRightPress,
 
@@ -50,6 +52,8 @@ export function AppHeader({
   const logo = isDark
     ? require('../../assets/images/logo_white.png')
     : require('../../assets/images/logo_name.png');
+
+  const showRightBadge = rightType === 'notification' && badgeCount > 0;
 
   return (
     <SafeAreaView
@@ -91,11 +95,11 @@ export function AppHeader({
             <TouchableOpacity onPress={onRightPress} style={styles.iconBtn}>
               <Ionicons
                 name="notifications-outline"
-                size={24}
                 color={theme.colors.textPrimary}
+                size={rightIconSize}
               />
 
-              {badgeCount > 0 && (
+              {showRightBadge && (
                 <Animated.View
                   style={[
                     styles.badge,
@@ -115,6 +119,18 @@ export function AppHeader({
               )}
             </TouchableOpacity>
           )}
+
+          {rightType === 'icon' && (
+            <TouchableOpacity onPress={onRightPress} style={styles.iconBtn}>
+              <Ionicons
+                name={rightIconName}
+                size={rightIconSize}
+                color={theme.colors.textPrimary}
+              />
+            </TouchableOpacity>
+          )}
+
+          {rightType === 'none' && <View style={styles.iconBtn} />}
         </View>
       </View>
     </SafeAreaView>

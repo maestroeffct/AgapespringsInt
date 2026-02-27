@@ -4,7 +4,7 @@ import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 
 const DevotionalScreen = () => {
   return (
-    <ScreenWrapper>
+    <ScreenWrapper padded={false}>
       <Text>DevotionalScreen</Text>
     </ScreenWrapper>
   );

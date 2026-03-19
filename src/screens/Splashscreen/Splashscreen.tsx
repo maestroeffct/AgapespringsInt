@@ -7,16 +7,31 @@ import styles from './styles';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { RootStackParamList } from '@/navigation/types';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { getItem, StorageKeys } from '../../helpers/storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
 export function SplashScreen({ navigation }: Props) {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('Onboarding'); // replace prevents going back
-    }, 5000); // 5 seconds
+    let isMounted = true;
 
-    return () => clearTimeout(timer); // cleanup
+    const boot = async () => {
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      const onboardingDone = await getItem<boolean>(StorageKeys.ONBOARDING_DONE);
+
+      if (!isMounted) {
+        return;
+      }
+
+      navigation.replace(onboardingDone ? 'Main' : 'Onboarding');
+    };
+
+    boot();
+
+    return () => {
+      isMounted = false;
+    };
   }, [navigation]);
 
   return (

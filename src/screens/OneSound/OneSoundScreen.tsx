@@ -60,6 +60,7 @@ export default function OneSoundScreen({ navigation }: any) {
         title: item.title,
         author: item.author,
         artwork: item.cover_url,
+        source: 'onesound',
       })),
     [filteredData],
   );
@@ -72,7 +73,12 @@ export default function OneSoundScreen({ navigation }: any) {
         rightType="icon"
         rightIconName="save"
         rightIconSize={22}
-        onRightPress={() => {}}
+        onRightPress={() =>
+          navigation.navigate('DownloadedAudioList', {
+            source: 'onesound',
+            title: 'Saved OneSound',
+          })
+        }
       />
       <SearchBar
         value={search}
@@ -126,6 +132,7 @@ export default function OneSoundScreen({ navigation }: any) {
                     title: item.title,
                     author: item.author,
                     artwork: item.cover_url,
+                    source: 'onesound',
                     queue: queueItems,
                     startIndex: index,
                   })

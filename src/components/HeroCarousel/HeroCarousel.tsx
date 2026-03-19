@@ -22,6 +22,11 @@ export function HeroCarousel() {
     return data && data.length > 0 ? data : FALLBACK_SLIDES;
   }, [data]);
 
+  useEffect(() => {
+    if (activeIndex <= slides.length - 1) return;
+    setActiveIndex(0);
+  }, [activeIndex, slides.length]);
+
   /**
    * Auto-scroll ONLY when real data exists
    */
@@ -98,36 +103,17 @@ export function HeroCarousel() {
         }}
       />
 
-      {/* DOTS */}
+      {/* Indicator reflects the exact slide count and active item */}
       <View style={styles.dots}>
-        {slides.map((_, i) => {
-          const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-
-          const scale = scrollX.interpolate({
-            inputRange,
-            outputRange: [1, 2.5, 1],
-            extrapolate: 'clamp',
-          });
-
-          const opacity = scrollX.interpolate({
-            inputRange,
-            outputRange: [0.4, 1, 0.4],
-            extrapolate: 'clamp',
-          });
-
-          return (
-            <Animated.View
-              key={i}
-              style={[
-                styles.dot,
-                {
-                  transform: [{ scale }],
-                  opacity,
-                },
-              ]}
-            />
-          );
-        })}
+        {slides.map((slide, i) => (
+          <View
+            key={slide.id ?? `slide-dot-${i}`}
+            style={[
+              styles.dot,
+              i === activeIndex ? styles.dotActive : styles.dotInactive,
+            ]}
+          />
+        ))}
       </View>
     </View>
   );

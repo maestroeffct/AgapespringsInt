@@ -3,6 +3,8 @@ import { View, TouchableOpacity, Animated, Image } from 'react-native';
 
 import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
+import { useTheme } from '../../../theme/ThemeProvider';
+import { palette } from '../../../theme/colors';
 
 type VideoCardProps = {
   thumbnail?: string;
@@ -23,6 +25,7 @@ export function VideoCard({
   layout = 'vertical',
   date,
 }: VideoCardProps) {
+  const { isDark } = useTheme();
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
 
@@ -75,7 +78,14 @@ export function VideoCard({
         </View>
 
         <View style={isHorizontal && styles.horizontalTextWrap}>
-          <AppText variant="body" style={styles.text} numberOfLines={2}>
+          <AppText
+            variant="body"
+            style={[
+              styles.text,
+              { color: isDark ? palette.white : palette.gray900 },
+            ]}
+            numberOfLines={2}
+          >
             {title}
           </AppText>
 

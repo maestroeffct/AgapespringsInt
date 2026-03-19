@@ -34,6 +34,10 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 
 import { AppText } from '../../components/AppText/AppText';
 import { getItem, setItem, StorageKeys } from '../../helpers/storage';
+import {
+  getDownloadedAudioMap,
+  upsertDownloadedAudio,
+} from '../../helpers/downloadedAudio';
 import { ensureTrackPlayerSetup } from '../../player/ensureTrackPlayerSetup';
 import type { AudioQueueItem } from '../../navigation/types';
 
@@ -43,6 +47,7 @@ type AudioPlayerParams = {
   author?: string;
   artwork?: string;
   id?: string; // unique id for favorites/download name
+  source?: 'onesound' | 'livingwaters';
   queue?: AudioQueueItem[];
   startIndex?: number;
 };
@@ -92,6 +97,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       title: routeParams.title ?? 'Audio',
       author: routeParams.author ?? '',
       artwork: routeParams.artwork,
+      source: routeParams.source,
     }),
     [
       routeParams.id,
@@ -99,6 +105,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       routeParams.title,
       routeParams.author,
       routeParams.artwork,
+      routeParams.source,
     ],
   );
 
@@ -114,6 +121,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         title: item.title,
         author: item.author,
         artwork: item.artwork,
+        source: item.source,
       }));
     }
 
@@ -150,6 +158,11 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
     typeof activeTrack?.artwork === 'string'
       ? activeTrack.artwork
       : fallbackTrack.artwork;
+  const activeSource =
+    incomingQueue[initialQueueIndex]?.source ??
+    routeParams.source ??
+    fallbackTrack.source ??
+    'livingwaters';
 
   const playbackState = usePlaybackState();
   const progress = useProgress(250); // updates every 250ms
@@ -280,6 +293,14 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
     })();
   }, [activeId]);
 
+  useEffect(() => {
+    (async () => {
+      const downloadedMap = await getDownloadedAudioMap();
+      const downloaded = downloadedMap[activeId];
+      setDownloadedPath(downloaded?.localPath ?? null);
+    })();
+  }, [activeId]);
+
   // Animate waveform fill smoothly based on progress ratio
   useEffect(() => {
     const ratio =
@@ -357,6 +378,15 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
       const exists = await RNFS.exists(path);
       if (exists) {
+        await upsertDownloadedAudio({
+          id: activeId,
+          title: activeTitle,
+          author: activeAuthor,
+          artwork: activeArtwork,
+          localPath: path,
+          source: activeSource,
+          downloadedAt: new Date().toISOString(),
+        });
         setDownloadedPath(path);
         Alert.alert('Downloaded', 'This audio is already downloaded.');
         setDownloading(false);
@@ -371,6 +401,15 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       const res = await task.promise;
 
       if (res.statusCode === 200) {
+        await upsertDownloadedAudio({
+          id: activeId,
+          title: activeTitle,
+          author: activeAuthor,
+          artwork: activeArtwork,
+          localPath: path,
+          source: activeSource,
+          downloadedAt: new Date().toISOString(),
+        });
         setDownloadedPath(path);
         Alert.alert('Downloaded', 'Saved inside app storage (Documents).');
       } else {

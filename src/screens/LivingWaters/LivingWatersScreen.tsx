@@ -12,6 +12,12 @@ export default function LivingWatersScreen({ navigation }: any) {
         rightType="icon"
         rightIconName="save"
         rightIconSize={22}
+        onRightPress={() =>
+          navigation.navigate('DownloadedAudioList', {
+            source: 'livingwaters',
+            title: 'Saved Living Waters',
+          })
+        }
       />
 
       <View style={{ flex: 1 }}>

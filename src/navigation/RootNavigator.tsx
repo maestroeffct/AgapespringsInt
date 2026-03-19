@@ -13,6 +13,7 @@ import { OnboardingScreen } from '../screens/Onboarding/OnboardingScreen';
 import { AppDrawerNavigator } from './AppDrawerNavigator';
 import VideoListScreen from '../screens/VideoList/VideoListScreen';
 import AudioListScreen from '../screens/AudioList/AudioListScreen';
+import DownloadedAudioListScreen from '../screens/DownloadedAudioList/DownloadedAudioListScreen';
 import TestimonyListScreen from '../screens/TestimonyList/TestimonyListScreen';
 import AudioPlayerScreen from '../screens/AudioPlayerScreen/AudioPlayerScreen';
 import { View } from 'react-native';
@@ -134,6 +135,10 @@ export function RootNavigator() {
           />
           <Stack.Screen name="VideoList" component={VideoListScreen} />
           <Stack.Screen name="AudioList" component={AudioListScreen} />
+          <Stack.Screen
+            name="DownloadedAudioList"
+            component={DownloadedAudioListScreen}
+          />
           <Stack.Screen name="TestimonyList" component={TestimonyListScreen} />
           <Stack.Screen name="AudioPlayer" component={AudioPlayerScreen} />
           <Stack.Screen name="VideoPlayer" component={VideoPlayerScreen} />

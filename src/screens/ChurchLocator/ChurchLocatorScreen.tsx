@@ -12,7 +12,7 @@ import { AppText } from '../../components/AppText/AppText';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { useChurchLocations } from '../../backend/api/hooks/useChurchLocations';
 import { useTheme } from '../../theme/ThemeProvider';
-import styles from './styles';
+import createStyles from './styles';
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 
 type Props = {
@@ -24,8 +24,12 @@ function normalizePhone(phone: string) {
 }
 
 export default function ChurchLocatorScreen({ navigation }: Props) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { data, isLoading, isRefetching, refetch } = useChurchLocations();
+  const styles = React.useMemo(
+    () => createStyles(theme.colors, isDark),
+    [theme.colors, isDark],
+  );
 
   const items = data ?? [];
 
@@ -81,13 +85,7 @@ export default function ChurchLocatorScreen({ navigation }: Props) {
             <TouchableOpacity
               activeOpacity={item.map_url ? 0.85 : 1}
               onPress={() => onPressMap(item.map_url)}
-              style={[
-                styles.card,
-                {
-                  backgroundColor: theme.colors.textSecondary,
-                  borderColor: theme.colors.accent,
-                },
-              ]}
+              style={styles.card}
             >
               <AppText font="geomanist" variant="h2" style={styles.nameText}>
                 {item.name}

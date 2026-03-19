@@ -18,10 +18,12 @@ import TrackPlayer, {
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { AppText } from '../AppText/AppText';
 import { useTheme } from '../../theme/ThemeProvider';
+import {
+  APP_TAB_BAR_HEIGHT,
+  MINI_PLAYER_GAP,
+} from '../../navigation/bottomTabMetrics';
 
 const FALLBACK = require('../../assets/images/audio_cover.png');
-const TAB_BAR_HEIGHT = 20;
-const MINI_PLAYER_GAP = 6;
 
 type Props = {
   onPress?: () => void; // open full player
@@ -57,7 +59,7 @@ export function MiniPlayer({ onPress }: Props) {
       pointerEvents="box-none"
       style={[
         styles.root,
-        { bottom: insets.bottom + TAB_BAR_HEIGHT + MINI_PLAYER_GAP },
+        { bottom: insets.bottom + APP_TAB_BAR_HEIGHT + MINI_PLAYER_GAP },
       ]}
     >
       <TouchableOpacity

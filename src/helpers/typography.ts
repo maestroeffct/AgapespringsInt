@@ -89,7 +89,7 @@ export function createTypography(colors: Colors) {
       },
       body: {
         fontFamily: FontFamily.poppins.regular,
-        fontSize: 16,
+        fontSize: 14,
         color: colors.textPrimary,
       },
       caption: {

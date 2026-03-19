@@ -45,6 +45,7 @@ export function LatestTabContent() {
     title: item.title,
     author: item.author,
     artwork: item.thumbnail_url,
+    source: 'livingwaters',
   }));
 
   return (
@@ -107,6 +108,7 @@ export function LatestTabContent() {
                     title: item.title,
                     author: item.author,
                     artwork: item.thumbnail_url,
+                    source: 'livingwaters',
                     queue: audioQueue,
                     startIndex: index,
                   })

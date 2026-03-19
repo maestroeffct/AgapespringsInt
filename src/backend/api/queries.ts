@@ -62,7 +62,7 @@ export const churchLocationsQueryOptions = () =>
     queryFn: async (): Promise<ChurchLocationItem[]> => {
       const res = await apiGet<ChurchLocationApiResponse>('/location/list');
 
-      return (res.data ?? []).map(item => ({
+      return [...(res.data ?? [])].reverse().map(item => ({
         id: String(item.id),
         name: item.name,
         address: item.address,

@@ -22,6 +22,7 @@ export default function AudioListScreen({ navigation }: any) {
         title: item.title,
         author: item.author,
         artwork: item.thumbnail_url,
+        source: 'livingwaters',
       })),
     [audioItems],
   );
@@ -99,6 +100,7 @@ function AudioListItem({
               title: item.title,
               author: item.author,
               artwork: item.thumbnail_url,
+              source: 'livingwaters',
               queue: audioQueue,
               startIndex: index,
             })

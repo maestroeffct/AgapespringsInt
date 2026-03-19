@@ -38,6 +38,7 @@ export function LivingWatersAudioTab() {
         title: item.title,
         author: item.author,
         artwork: item.thumbnail_url,
+        source: 'livingwaters',
       })),
     [items],
   );
@@ -86,6 +87,7 @@ export function LivingWatersAudioTab() {
                   title: item.title,
                   author: item.author,
                   artwork: item.thumbnail_url,
+                  source: 'livingwaters',
                   queue: queueItems,
                   startIndex: index,
                 })

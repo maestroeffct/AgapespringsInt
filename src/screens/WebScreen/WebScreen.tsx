@@ -5,6 +5,7 @@ import { useTheme } from '../../theme/ThemeProvider';
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { useFocusEffect } from '@react-navigation/native';
+import styles from './styles';
 
 type Props = {
   route: { params?: { title?: string; url: string } };
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export default function WebScreen({ route, navigation }: Props) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const webRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
   const opacity = useRef(new Animated.Value(0)).current;
@@ -54,7 +55,7 @@ export default function WebScreen({ route, navigation }: Props) {
 
   return (
     <ScreenWrapper padded={false}>
-      <Animated.View style={{ flex: 1, opacity }}>
+      <Animated.View style={[styles.root, { opacity }]}>
         <AppHeader
           title={title}
           showLogo={false}
@@ -63,7 +64,12 @@ export default function WebScreen({ route, navigation }: Props) {
           onLeftPress={() => navigation.goBack()}
         />
 
-        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <View
+          style={[
+            styles.webContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
           <WebView
             ref={webRef}
             source={webSource}
@@ -75,22 +81,13 @@ export default function WebScreen({ route, navigation }: Props) {
             javaScriptEnabled
             domStorageEnabled
             allowsBackForwardNavigationGestures
-            style={{ flex: 1 }}
+            pullToRefreshEnabled
+            refreshControlLightMode={!isDark}
+            style={styles.webView}
           />
 
           {loading ? (
-            <View
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'transparent',
-              }}
-            >
+            <View style={styles.loadingOverlay}>
               <ActivityIndicator color={theme.colors.primary} />
             </View>
           ) : null}

@@ -27,7 +27,16 @@ export default StyleSheet.create({
   dot: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#B3123C', // brand color
     marginHorizontal: 4,
+  },
+  dotActive: {
+    width: 20,
+    backgroundColor: '#B3123C',
+    opacity: 1,
+  },
+  dotInactive: {
+    width: 8,
+    backgroundColor: '#D1D5DB',
+    opacity: 1,
   },
 });

@@ -4,6 +4,7 @@ export type AudioQueueItem = {
   title?: string;
   author?: string;
   artwork?: string;
+  source?: 'onesound' | 'livingwaters';
 };
 
 export type RootStackParamList = {
@@ -19,6 +20,12 @@ export type RootStackParamList = {
 
   VideoList: undefined;
   AudioList: undefined;
+  DownloadedAudioList:
+    | {
+        source?: 'onesound' | 'livingwaters';
+        title?: string;
+      }
+    | undefined;
   TestimonyList: undefined;
 
   AudioPlayer: {
@@ -27,6 +34,7 @@ export type RootStackParamList = {
     title?: string;
     author?: string;
     artwork?: string;
+    source?: 'onesound' | 'livingwaters';
     queue?: AudioQueueItem[];
     startIndex?: number;
   };

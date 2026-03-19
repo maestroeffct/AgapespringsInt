@@ -10,6 +10,8 @@ import {
 
 import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
+import { useTheme } from '../../../theme/ThemeProvider';
+import { palette } from '../../../theme/colors';
 
 const FALLBACK = require('../../../assets/images/audio_cover.png');
 
@@ -36,6 +38,7 @@ export function AudioCard({
   imageHeight,
   containerStyle,
 }: AudioCardProps) {
+  const { isDark } = useTheme();
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
 
@@ -90,7 +93,14 @@ export function AudioCard({
 
         {/* Text Section */}
         <View style={isHorizontal && styles.horizontalTextWrap}>
-          <AppText variant="body" numberOfLines={2} style={styles.title}>
+          <AppText
+            variant="body"
+            numberOfLines={2}
+            style={[
+              styles.title,
+              { color: isDark ? palette.white : palette.gray900 },
+            ]}
+          >
             {title}
           </AppText>
 

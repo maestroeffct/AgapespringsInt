@@ -10,6 +10,7 @@ import { AppText } from '../../components/AppText/AppText';
 import { useTheme } from '../../theme/ThemeProvider';
 import styles from './styles';
 import { getInstalledAppVersion } from '../../helpers/appVersion';
+import { palette } from '../../theme/colors';
 
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const { theme, isDark, mode, setMode } = useTheme();
@@ -20,7 +21,9 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     : require('../../assets/images/logo_name.png');
 
   React.useEffect(() => {
-    getInstalledAppVersion().then(setAppVersion).catch(() => {});
+    getInstalledAppVersion()
+      .then(setAppVersion)
+      .catch(() => {});
   }, []);
 
   const shareApp = async () => {
@@ -55,6 +58,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
             props.navigation.navigate('AboutWeb');
           }}
           theme={theme}
+          isDark={isDark}
         />
 
         <DrawerItem
@@ -65,6 +69,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
             props.navigation.navigate('GiveWeb');
           }}
           theme={theme}
+          isDark={isDark}
         />
 
         <DrawerItem
@@ -75,6 +80,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
             props.navigation.navigate('ChurchLocator');
           }}
           theme={theme}
+          isDark={isDark}
         />
 
         <DrawerItem
@@ -85,6 +91,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
             props.navigation.navigate('Platforms');
           }}
           theme={theme}
+          isDark={isDark}
         />
 
         <View style={styles.divider} />
@@ -94,6 +101,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           label={`App Theme · ${readableMode}`}
           onPress={() => setThemeSheetVisible(true)}
           theme={theme}
+          isDark={isDark}
         />
 
         <DrawerItem
@@ -101,6 +109,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           label="Share App"
           onPress={shareApp}
           theme={theme}
+          isDark={isDark}
         />
 
         <View style={styles.divider} />
@@ -170,12 +179,17 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   );
 }
 
-function DrawerItem({ icon, label, onPress, theme }: any) {
+function DrawerItem({ icon, label, onPress, theme, isDark }: any) {
   return (
     <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.8}>
       <Ionicons name={icon} size={22} color={theme.colors.primary} />
 
-      <AppText style={[styles.itemText, { color: theme.colors.textPrimary }]}>
+      <AppText
+        style={[
+          styles.itemText,
+          { color: isDark ? palette.white : palette.black },
+        ]}
+      >
         {label}
       </AppText>
 

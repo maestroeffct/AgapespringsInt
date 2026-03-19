@@ -35,7 +35,12 @@ export async function ensureTrackPlayerSetup() {
         Capability.SkipToNext,
         Capability.SkipToPrevious,
       ],
-      compactCapabilities: [Capability.Play, Capability.Pause],
+      notificationCapabilities: [
+        Capability.Play,
+        Capability.Pause,
+        Capability.SkipToNext,
+        Capability.SkipToPrevious,
+      ],
     });
 
     setupDone = true;

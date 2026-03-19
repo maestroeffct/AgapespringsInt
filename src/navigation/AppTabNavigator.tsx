@@ -6,6 +6,11 @@ import LivingWatersScreen from '../screens/LivingWaters/LivingWatersScreen';
 import DevotionalScreen from '../screens/Devotional/DevotionalScreen';
 import OneSoundScreen from '../screens/OneSound/OneSoundScreen';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import {
+  APP_TAB_BAR_HEIGHT,
+  APP_TAB_BAR_PADDING_BOTTOM,
+  APP_TAB_BAR_PADDING_TOP,
+} from './bottomTabMetrics';
 // import AudioPlayerScreen from '../screens/AudioPlayerScreen/AudioPlayerScreen';
 
 // import { LivingWatersScreen } from '../screens/LivingWaters/LivingWatersScreen';
@@ -33,8 +38,9 @@ export function AppTabNavigator() {
         tabBarStyle: {
           backgroundColor: theme.colors.background,
           borderTopColor: theme.colors.border,
-          height: 60,
-          paddingBottom: 5,
+          height: APP_TAB_BAR_HEIGHT,
+          paddingTop: APP_TAB_BAR_PADDING_TOP,
+          paddingBottom: APP_TAB_BAR_PADDING_BOTTOM,
         },
         tabBarLabelStyle: {
           fontSize: 12,

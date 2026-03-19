@@ -9,7 +9,10 @@ import { TestimonyCard } from '../../components/Cards/TestimonyCard.tsx/Testimon
 import { useNavigation } from '@react-navigation/native';
 import type { AudioQueueItem } from '../../navigation/types';
 
-import { useGetTestimonyVideosQuery } from '../../backend/api/youtube';
+import {
+  useGetLatestFromChannelQuery,
+  useGetTestimonyVideosQuery,
+} from '../../backend/api/youtube';
 import { useAudioSermon } from '../../backend/api/hooks/useAudioSermon';
 
 const PLACEHOLDER_COUNT = 10;
@@ -22,7 +25,7 @@ export function LatestTabContent() {
     item?.id?.videoId;
 
   const { data: videoData, isLoading: videosLoading } =
-    useGetTestimonyVideosQuery({
+    useGetLatestFromChannelQuery({
       maxResults: 10,
     });
 

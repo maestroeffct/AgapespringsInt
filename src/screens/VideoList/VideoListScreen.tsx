@@ -4,13 +4,13 @@ import { FlatList } from 'react-native';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
-import { useGetTestimonyVideosQuery } from '../../backend/api/youtube';
+import { useGetLatestFromChannelQuery } from '../../backend/api/youtube';
 import styles from './styles';
 
 const PLACEHOLDER_COUNT = 10;
 
 export default function VideoListScreen({ navigation }: any) {
-  const { data, isLoading } = useGetTestimonyVideosQuery({
+  const { data, isLoading } = useGetLatestFromChannelQuery({
     maxResults: 50, // load more for list page
   });
   const getVideoId = (item: any): string | undefined =>

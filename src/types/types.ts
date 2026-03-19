@@ -4,4 +4,5 @@ export type NotificationItem = {
   message: string;
   createdAt: string;
   read: boolean;
+  data?: Record<string, string>;
 };

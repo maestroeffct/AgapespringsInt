@@ -14,6 +14,7 @@ export const StorageKeys = {
   APP_THEME: 'APP_THEME',
   QUERY_CACHE: 'QUERY_CACHE',
   FAVORITES: 'FAVORITES',
+  NOTIFICATIONS: 'NOTIFICATIONS',
 } as const;
 
 export type StorageKey = keyof typeof StorageKeys;

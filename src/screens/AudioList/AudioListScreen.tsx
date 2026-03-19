@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, View } from 'react-native';
 
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 import { AudioCard } from '../../components/Cards/AudioCard/AudioCard';
 import { useAudioSermon } from '../../backend/api/hooks/useAudioSermon';
 import type { AudioQueueItem } from '../../navigation/types';
+import styles from './styles';
 
 const PLACEHOLDER_COUNT = 10;
 
@@ -32,6 +33,7 @@ export default function AudioListScreen({ navigation }: any) {
         showLogo={false}
         leftType="back"
         onLeftPress={() => navigation.goBack()}
+        rightType={'none'}
       />
 
       <FlatList
@@ -40,36 +42,69 @@ export default function AudioListScreen({ navigation }: any) {
             ? Array.from({ length: PLACEHOLDER_COUNT })
             : audioItems
         }
+        numColumns={2}
         keyExtractor={(item: any, index) => item?.id ?? `placeholder-${index}`}
-        renderItem={({ item, index }) => {
-          // Placeholder state
-          if (!item?.id) {
-            return <AudioCard full />;
-          }
-
-          return (
-            <AudioCard
-              full
-              title={item.title}
-              author={item.author}
-              thumbnail={item.thumbnail_url}
-              onPress={() =>
-                navigation.navigate('AudioPlayer', {
-                  id: item.id,
-                  audioUrl: item.audio_url,
-                  title: item.title,
-                  author: item.author,
-                  artwork: item.thumbnail_url,
-                  queue: audioQueue,
-                  startIndex: index,
-                })
-              }
-            />
-          );
-        }}
-        contentContainerStyle={{ padding: 16 }}
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.listContent}
+        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
+        renderItem={({ item, index }) => (
+          <View style={styles.cardWrapper}>
+            <AudioListItem
+              item={item}
+              index={index}
+              navigation={navigation}
+              audioQueue={audioQueue}
+            />
+          </View>
+        )}
       />
     </ScreenWrapper>
+  );
+}
+
+function AudioListItem({
+  item,
+  index,
+  navigation,
+  audioQueue,
+}: {
+  item: any;
+  index: number;
+  navigation: any;
+  audioQueue: AudioQueueItem[];
+}) {
+  return (
+    <>
+      {!item?.id ? (
+        <AudioCard
+          full
+          imageHeight={170}
+          title=""
+          author=""
+          thumbnail={undefined}
+          onPress={undefined}
+        />
+      ) : (
+        <AudioCard
+          full
+          imageHeight={170}
+          title={item.title}
+          author={item.author}
+          thumbnail={item.thumbnail_url}
+          onPress={() =>
+            navigation.navigate('AudioPlayer', {
+              id: item.id,
+              audioUrl: item.audio_url,
+              title: item.title,
+              author: item.author,
+              artwork: item.thumbnail_url,
+              queue: audioQueue,
+              startIndex: index,
+            })
+          }
+        />
+      )}
+    </>
   );
 }

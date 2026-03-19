@@ -7,6 +7,13 @@ import { Provider } from 'react-redux';
 import { store } from './src/utils/store';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import messaging from '@react-native-firebase/messaging';
+import Toast from 'react-native-toast-message';
+import {
+  requestNotificationPermission,
+  ensureNotificationChannel,
+} from './src/notifications/notifee';
+import { setupNotificationListeners } from './src/notifications/listeners';
+import { registerPushToken } from './src/notifications/push';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -21,8 +28,14 @@ const queryClient = new QueryClient({
 
 const App = () => {
   useEffect(() => {
+    let teardownNotifications: undefined | (() => void);
+
     const setup = async () => {
       try {
+        await requestNotificationPermission();
+        await ensureNotificationChannel();
+        teardownNotifications = await setupNotificationListeners();
+
         await messaging().registerDeviceForRemoteMessages();
         const authStatus = await messaging().requestPermission();
         const isAuthorized =
@@ -54,6 +67,8 @@ const App = () => {
 
         const token = await messaging().getToken();
         console.log('FCM TOKEN:', token);
+        await registerPushToken(token);
+        console.log('Push token registered with backend successfully.');
       } catch (error) {
         console.log('Push setup error:', error);
       }
@@ -63,9 +78,17 @@ const App = () => {
 
     const unsub = messaging().onTokenRefresh(t => {
       console.log('FCM TOKEN REFRESH:', t);
+      registerPushToken(t).catch(error => {
+        console.log('Push token refresh registration error:', error);
+      }).then(() => {
+        console.log('Refreshed push token registered with backend successfully.');
+      });
     });
 
-    return unsub;
+    return () => {
+      teardownNotifications?.();
+      unsub();
+    };
   }, []);
   return (
     <Provider store={store}>
@@ -73,6 +96,7 @@ const App = () => {
         <SafeAreaProvider>
           <ThemeProvider>
             <RootNavigator />
+            <Toast />
           </ThemeProvider>
         </SafeAreaProvider>
       </QueryClientProvider>

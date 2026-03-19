@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import styles from './styles';
+import createStyles from './styles';
 import { onboardingSlides } from './slides';
 
 import { AppText } from '../../components/AppText/AppText';
@@ -25,6 +25,10 @@ export function OnboardingScreen({ navigation }: any) {
   const { theme } = useTheme();
   const scrollX = useRef(new Animated.Value(0)).current;
   const isLast = index === onboardingSlides.length - 1;
+  const styles = React.useMemo(
+    () => createStyles(theme.colors.imageOverlay),
+    [theme.colors.imageOverlay],
+  );
 
   const handleNext = async () => {
     if (isLast) {
@@ -36,6 +40,11 @@ export function OnboardingScreen({ navigation }: any) {
         animated: true,
       });
     }
+  };
+
+  const handleSkip = async () => {
+    await setItem(StorageKeys.ONBOARDING_DONE, true);
+    navigation.replace('Main');
   };
 
   return (
@@ -72,10 +81,7 @@ export function OnboardingScreen({ navigation }: any) {
               {!isLast && (
                 <TouchableOpacity
                   style={styles.skip}
-                  onPress={async () => {
-                    await setItem(StorageKeys.ONBOARDING_DONE, true);
-                    navigation.replace('Home');
-                  }}
+                  onPress={handleSkip}
                 >
                   <AppText variant="body" style={styles.skipBold}>
                     Skip &gt;

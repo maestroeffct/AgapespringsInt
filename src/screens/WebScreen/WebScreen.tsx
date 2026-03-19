@@ -20,7 +20,7 @@ export default function WebScreen({ route, navigation }: Props) {
 
   const title = route?.params?.title ?? 'Web';
   const url = route?.params?.url ?? 'https://www.agapespringsint.com';
-  const webSource = useMemo(() => ({uri: url}), [url]);
+  const webSource = useMemo(() => ({ uri: url }), [url]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -54,15 +54,16 @@ export default function WebScreen({ route, navigation }: Props) {
 
   return (
     <ScreenWrapper padded={false}>
-      <Animated.View style={{flex: 1, opacity}}>
+      <Animated.View style={{ flex: 1, opacity }}>
         <AppHeader
           title={title}
           showLogo={false}
           leftType="back"
+          rightType={'none'}
           onLeftPress={() => navigation.goBack()}
         />
 
-        <View style={{flex: 1, backgroundColor: theme.colors.background}}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
           <WebView
             ref={webRef}
             source={webSource}
@@ -74,7 +75,7 @@ export default function WebScreen({ route, navigation }: Props) {
             javaScriptEnabled
             domStorageEnabled
             allowsBackForwardNavigationGestures
-            style={{flex: 1}}
+            style={{ flex: 1 }}
           />
 
           {loading ? (

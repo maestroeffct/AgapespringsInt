@@ -12,6 +12,8 @@ import { PullToRefresh } from '../../components/PullToRefresh/PullToRefresh';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../backend/api/keys';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../utils/store';
 
 export default function HomeScreen() {
   const [tab, setTab] = useState<'latest' | 'resources'>('latest');
@@ -19,10 +21,13 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
 
   const navigation = useNavigation<any>();
+  const unreadCount = useSelector((state: RootState) =>
+    state.notifications.items.filter(item => !item.read).length,
+  );
   return (
     <ScreenWrapper padded={false}>
       <AppHeader
-        badgeCount={10}
+        badgeCount={unreadCount}
         onLeftPress={() => navigation.openDrawer()}
         onRightPress={() => navigation.navigate('Notifications')}
       />

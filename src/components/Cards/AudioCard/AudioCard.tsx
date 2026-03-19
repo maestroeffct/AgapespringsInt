@@ -1,10 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, TouchableOpacity, Animated } from 'react-native';
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  Animated,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 
 import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
 
 const FALLBACK = require('../../../assets/images/audio_cover.png');
+
+type AudioCardProps = {
+  thumbnail?: string;
+  title?: string;
+  onPress?: () => void;
+  full?: boolean;
+  author?: string;
+  date?: string;
+  layout?: 'vertical' | 'horizontal';
+  imageHeight?: number;
+  containerStyle?: StyleProp<ViewStyle>;
+};
 
 export function AudioCard({
   thumbnail,
@@ -14,6 +33,8 @@ export function AudioCard({
   author,
   date,
   layout = 'vertical',
+  imageHeight,
+  containerStyle,
 }: AudioCardProps) {
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
@@ -31,11 +52,16 @@ export function AudioCard({
         style={[
           full ? styles.fullCard : styles.card,
           isHorizontal && styles.horizontalCard,
+          containerStyle,
         ]}
       >
         {/* Image */}
         <View
-          style={[styles.imageWrap, isHorizontal && styles.horizontalImageWrap]}
+          style={[
+            styles.imageWrap,
+            isHorizontal && styles.horizontalImageWrap,
+            imageHeight ? { height: imageHeight } : null,
+          ]}
         >
           <Image
             source={FALLBACK}

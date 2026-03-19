@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, View } from 'react-native';
 
 import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
-import { useGetTestimonyVideosQuery } from '../../backend/api/youtube';
+import { useGetLatestFromChannelQuery } from '../../backend/api/youtube';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -16,7 +16,9 @@ export function LivingWatersVideoTab() {
     item?.id?.videoId;
 
   const [q, setQ] = useState('');
-  const { data, isLoading } = useGetTestimonyVideosQuery({ maxResults: 50 });
+  const { data, isLoading } = useGetLatestFromChannelQuery({
+    maxResults: 150,
+  });
 
   const items = useMemo(() => data?.items ?? [], [data]);
 

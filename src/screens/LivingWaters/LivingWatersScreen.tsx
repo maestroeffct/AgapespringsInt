@@ -6,7 +6,13 @@ import { LivingWatersTopTabs } from '../../navigation/LivingWaterTopTabsNavigato
 export default function LivingWatersScreen({ navigation }: any) {
   return (
     <ScreenWrapper padded={false}>
-      <AppHeader showLogo onLeftPress={() => navigation.openDrawer()} />
+      <AppHeader
+        showLogo
+        onLeftPress={() => navigation.openDrawer()}
+        rightType="icon"
+        rightIconName="save"
+        rightIconSize={22}
+      />
 
       <View style={{ flex: 1 }}>
         <LivingWatersTopTabs />

@@ -19,7 +19,7 @@ export function SearchBar({ value, onChangeText, placeholder }: Props) {
       style={[
         styles.wrap,
         {
-          borderColor: theme.colors.accent,
+          borderColor: theme.colors.accent2,
           backgroundColor: theme.colors.background,
         },
       ]}

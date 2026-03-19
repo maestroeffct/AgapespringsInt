@@ -5,7 +5,7 @@ const BASE_URL = 'https://youtube.googleapis.com/youtube/v3/';
 
 // Replace with your real IDs
 export const YT = {
-  sermonPlaylistId: 'UUBWp1EIoJNEe4ggBArv84ng',
+  sermonPlaylistId: 'PLr5e61cKjvGwgdVXrOCR2rONZaEpCRLHl',
   testimonyPlaylistId: 'PLY4ek2J_EXar8qISmjtcB-dyVz3YF7SqX',
   channelId: 'UCLaOIZ7aOxWqIHdhWu8AIlw',
 };

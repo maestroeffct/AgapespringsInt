@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { FlatList, View } from 'react-native';
 import { DevotionalCard } from '../../components/Cards/DevotionalCard/DevotionalCard';
+import { AppText } from '../../components/AppText/AppText';
 import { useTheme } from '../../theme/ThemeProvider';
+import { createDevotionalLatestTabStyles } from './styles';
 
 type DevotionalItem = {
   id: string;
@@ -15,6 +17,7 @@ type DevotionalItem = {
 
 export function DevotionalLatestTab() {
   const { theme } = useTheme();
+  const styles = createDevotionalLatestTabStyles(theme.colors);
 
   const data = useMemo<DevotionalItem[]>(
     () => [
@@ -23,7 +26,7 @@ export function DevotionalLatestTab() {
         title: "Wisdom: Heaven's Strategy In Adversity",
         excerpt:
           'Psalm 119:97-98 (NLT): “Oh, how I love your instructions! I think about them all day long...”',
-        author: 'Apostle Grace Lubega',
+        author: 'Rev. Barnabas Alumogie',
         date: 'Thursday, 26 Feb',
         category: 'Wisdom',
         thumbnail: '', // add url if you have
@@ -32,7 +35,7 @@ export function DevotionalLatestTab() {
         id: '2',
         title: 'Marriage Series: What God Wants For You',
         excerpt: 'Isaiah 34:16 (KJV): “Seek ye out of the book of the Lord...”',
-        author: 'Apostle Grace Lubega',
+        author: 'Rev. Barnabas Alumogie',
         date: 'Wednesday, 25 Feb',
         category: 'Marriage Series',
       },
@@ -41,21 +44,12 @@ export function DevotionalLatestTab() {
   );
 
   return (
-    <View
-      style={{
-        flex: 1,
-        paddingHorizontal: 16,
-        backgroundColor: theme.colors.background,
-      }}
-    >
+    <View style={styles.container}>
       <FlatList
         data={data}
         keyExtractor={item => item.id}
-        style={{ backgroundColor: theme.colors.background }}
-        contentContainerStyle={{
-          backgroundColor: theme.colors.background,
-          flexGrow: 1,
-        }}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <DevotionalCard
             title={item.title}
@@ -71,6 +65,17 @@ export function DevotionalLatestTab() {
         )}
         showsVerticalScrollIndicator={false}
       />
+
+      <View style={styles.overlay} pointerEvents="auto">
+        <View style={styles.overlayCard}>
+          <AppText font="poppins" variant="h2" style={styles.overlayTitle}>
+            Coming Soon
+          </AppText>
+          <AppText variant="body" style={styles.overlayMessage}>
+            This devotional section is still under ongoing development.
+          </AppText>
+        </View>
+      </View>
     </View>
   );
 }

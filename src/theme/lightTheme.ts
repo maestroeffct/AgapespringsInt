@@ -1,4 +1,4 @@
-import { palette } from './colors';
+import { palette, withOpacity } from './colors';
 
 export const lightTheme = {
   isDark: false,
@@ -12,7 +12,11 @@ export const lightTheme = {
     textSecondary: palette.gray600,
 
     primary: palette.wine,
+    primaryText: palette.white,
     accent: palette.gold,
+    accent2: palette.gold,
+
+    imageOverlay: withOpacity(palette.black, 0.28),
 
     border: palette.gray300,
   },

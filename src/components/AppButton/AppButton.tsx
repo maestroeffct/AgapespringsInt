@@ -47,7 +47,8 @@ export function AppButton({
 
   const borderColor = variant === 'outline' ? colors.primary : 'transparent';
 
-  const textColor = variant === 'primary' ? colors.background : colors.primary;
+  const textColor =
+    variant === 'primary' ? colors.primaryText : colors.primary;
 
   return (
     <TouchableOpacity

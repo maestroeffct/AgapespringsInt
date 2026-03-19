@@ -1,5 +1,6 @@
 import messaging from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
+import { API_BASE_URL } from '../backend/api/client';
 
 export async function requestPushPermission() {
   const authStatus = await messaging().requestPermission();
@@ -23,4 +24,24 @@ export async function getFcmToken(): Promise<string | null> {
 // optional: token refresh (send to backend again)
 export function listenToTokenRefresh(onToken: (token: string) => void) {
   return messaging().onTokenRefresh(onToken);
+}
+
+export async function registerPushToken(token: string) {
+  const response = await fetch(`${API_BASE_URL}/notifications/registerToken`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      token,
+      platform: Platform.OS,
+      provider: 'fcm',
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to register push token');
+  }
+
+  return response.json();
 }

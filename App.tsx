@@ -26,6 +26,14 @@ const queryClient = new QueryClient({
   },
 });
 
+function maskToken(token: string) {
+  if (token.length <= 16) {
+    return token;
+  }
+
+  return `${token.slice(0, 8)}...${token.slice(-8)}`;
+}
+
 const App = () => {
   useEffect(() => {
     let teardownNotifications: undefined | (() => void);
@@ -63,12 +71,14 @@ const App = () => {
             );
             return;
           }
+
+          console.log('APNs token available on iOS device.');
         }
 
         const token = await messaging().getToken();
-        console.log('FCM TOKEN:', token);
-        await registerPushToken(token);
-        console.log('Push token registered with backend successfully.');
+        console.log(`FCM token fetched successfully: ${maskToken(token)}`);
+        const response = await registerPushToken(token);
+        console.log('Push token registered with backend successfully.', response);
       } catch (error) {
         console.log('Push setup error:', error);
       }
@@ -77,7 +87,7 @@ const App = () => {
     setup();
 
     const unsub = messaging().onTokenRefresh(t => {
-      console.log('FCM TOKEN REFRESH:', t);
+      console.log(`FCM token refreshed: ${maskToken(t)}`);
       registerPushToken(t).catch(error => {
         console.log('Push token refresh registration error:', error);
       }).then(() => {

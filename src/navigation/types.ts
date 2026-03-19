@@ -11,6 +11,11 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Main: undefined;
   Notifications: undefined;
+  UpdateRequired: {
+    currentVersion: string;
+    minimumVersion: string;
+    storeUrl: string;
+  };
 
   VideoList: undefined;
   AudioList: undefined;

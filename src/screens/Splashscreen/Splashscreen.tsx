@@ -8,6 +8,9 @@ import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { RootStackParamList } from '@/navigation/types';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { getItem, StorageKeys } from '../../helpers/storage';
+import { getInstalledAppVersion, compareVersions } from '../../helpers/appVersion';
+import { getAppConfig } from '../../backend/api/config';
+import { Platform } from 'react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
@@ -16,15 +19,52 @@ export function SplashScreen({ navigation }: Props) {
     let isMounted = true;
 
     const boot = async () => {
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise<void>(resolve => {
+        setTimeout(resolve, 5000);
+      });
 
       const onboardingDone = await getItem<boolean>(StorageKeys.ONBOARDING_DONE);
+      const fallbackRoute: 'Main' | 'Onboarding' = onboardingDone
+        ? 'Main'
+        : 'Onboarding';
+      let updateParams: RootStackParamList['UpdateRequired'] | undefined;
+
+      try {
+        const [appConfig, installedVersion] = await Promise.all([
+          getAppConfig(),
+          getInstalledAppVersion(),
+        ]);
+
+        const minimumVersion =
+          Platform.OS === 'ios'
+            ? appConfig.minVersion.ios
+            : appConfig.minVersion.android;
+        const storeUrl =
+          Platform.OS === 'ios'
+            ? appConfig.storeUrls.ios
+            : appConfig.storeUrls.android;
+
+        if (minimumVersion && compareVersions(installedVersion, minimumVersion) < 0) {
+          updateParams = {
+            currentVersion: installedVersion,
+            minimumVersion,
+            storeUrl,
+          };
+        }
+      } catch (error) {
+        console.log('App config check failed at splash:', error);
+      }
 
       if (!isMounted) {
         return;
       }
 
-      navigation.replace(onboardingDone ? 'Main' : 'Onboarding');
+      if (updateParams) {
+        navigation.replace('UpdateRequired', updateParams);
+        return;
+      }
+
+      navigation.replace(fallbackRoute);
     };
 
     boot();

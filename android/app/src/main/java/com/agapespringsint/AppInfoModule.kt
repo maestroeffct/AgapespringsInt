@@ -1,0 +1,22 @@
+package com.agapespringsint
+
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContextBaseJavaModule
+import com.facebook.react.bridge.ReactMethod
+
+class AppInfoModule(reactContext: ReactApplicationContext) :
+  ReactContextBaseJavaModule(reactContext) {
+
+  override fun getName(): String = "AppInfo"
+
+  @ReactMethod
+  fun getVersion(promise: Promise) {
+    promise.resolve(BuildConfig.VERSION_NAME)
+  }
+
+  @ReactMethod
+  fun getBuildNumber(promise: Promise) {
+    promise.resolve(BuildConfig.VERSION_CODE.toString())
+  }
+}

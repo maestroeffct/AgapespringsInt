@@ -9,13 +9,19 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { AppText } from '../../components/AppText/AppText';
 import { useTheme } from '../../theme/ThemeProvider';
 import styles from './styles';
+import { getInstalledAppVersion } from '../../helpers/appVersion';
 
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const { theme, isDark, mode, setMode } = useTheme();
   const [themeSheetVisible, setThemeSheetVisible] = useState(false);
+  const [appVersion, setAppVersion] = useState('...');
   const logo = isDark
     ? require('../../assets/images/logo_white.png')
     : require('../../assets/images/logo_name.png');
+
+  React.useEffect(() => {
+    getInstalledAppVersion().then(setAppVersion).catch(() => {});
+  }, []);
 
   const shareApp = async () => {
     await Share.share({
@@ -99,7 +105,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
         <View style={styles.divider} />
 
-        <AppText style={styles.version}>Version 1.2.0</AppText>
+        <AppText style={styles.version}>Version {appVersion}</AppText>
       </DrawerContentScrollView>
 
       <Modal

@@ -20,6 +20,7 @@ import { MiniPlayer } from '../components/MiniPlayer/MiniPlayer';
 import TrackPlayer from 'react-native-track-player';
 import NotificationsScreen from '../screens/NotificationsScreen/NotificationScreen';
 import VideoPlayerScreen from '../screens/VideoPlayerScreen/VideoPlayerScreen';
+import UpdateRequiredScreen from '../screens/UpdateRequired/UpdateRequiredScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 type NavState = NavigationState | PartialState<NavigationState> | undefined;
@@ -127,6 +128,10 @@ export function RootNavigator() {
           <Stack.Screen name="Splash" component={SplashScreen} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="Main" component={AppDrawerNavigator} />
+          <Stack.Screen
+            name="UpdateRequired"
+            component={UpdateRequiredScreen}
+          />
           <Stack.Screen name="VideoList" component={VideoListScreen} />
           <Stack.Screen name="AudioList" component={AudioListScreen} />
           <Stack.Screen name="TestimonyList" component={TestimonyListScreen} />

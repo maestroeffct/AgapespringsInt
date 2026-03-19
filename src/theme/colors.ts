@@ -2,8 +2,8 @@ export const palette = {
   wine: '#7A0F2B',
   wineDark: '#5e0a21ff',
 
-  gold: '#F5B301',
-  goldSoft: '#FFD166',
+  gold: '#C40936',
+  goldSoft: '#F5B301',
 
   white: '#FFFFFF',
   black: '#0B0B0B',

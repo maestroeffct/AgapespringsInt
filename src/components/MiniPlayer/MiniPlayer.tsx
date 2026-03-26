@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -31,14 +31,13 @@ type Props = {
 };
 
 export function MiniPlayer({ onPress }: Props) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const androidTabInset =
     Platform.OS === 'android' ? ANDROID_TAB_BAR_EXTRA_BOTTOM : 0;
   const track = useActiveTrack();
   const playback = usePlaybackState();
   const { position, duration } = useProgress(500);
-  const [dismissedTrackId, setDismissedTrackId] = useState<string | null>(null);
 
   const isPlaying = playback.state === State.Playing;
 
@@ -52,8 +51,6 @@ export function MiniPlayer({ onPress }: Props) {
 
   // Only show when we have an active track
   if (!track?.id) return null;
-  const currentTrackId = String(track.id);
-  if (dismissedTrackId === currentTrackId) return null;
 
   const ratio = duration > 0 ? position / duration : 0;
 
@@ -104,7 +101,11 @@ export function MiniPlayer({ onPress }: Props) {
           <View
             style={[
               styles.progressTrack,
-              { backgroundColor: theme.colors.border },
+              {
+                backgroundColor: isDark
+                  ? 'rgba(255,255,255,0.22)'
+                  : theme.colors.border,
+              },
             ]}
           >
             <View
@@ -112,7 +113,7 @@ export function MiniPlayer({ onPress }: Props) {
                 styles.progressFill,
                 {
                   width: `${Math.max(0, Math.min(1, ratio)) * 100}%`,
-                  backgroundColor: theme.colors.primary,
+                  backgroundColor: isDark ? '#FFFFFF' : theme.colors.primary,
                 },
               ]}
             />
@@ -170,7 +171,9 @@ export function MiniPlayer({ onPress }: Props) {
             borderColor: theme.colors.border,
           },
         ]}
-        onPress={() => setDismissedTrackId(currentTrackId)}
+        onPress={() => {
+          TrackPlayer.reset().catch(() => {});
+        }}
       >
         <Ionicons name="close" size={14} color={theme.colors.textPrimary} />
       </TouchableOpacity>

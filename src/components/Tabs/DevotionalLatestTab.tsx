@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
   View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { DevotionalCard } from '../../components/Cards/DevotionalCard/DevotionalCard';
 import { AppText } from '../../components/AppText/AppText';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
@@ -18,16 +18,51 @@ export function DevotionalLatestTab() {
   const styles = createDevotionalLatestTabStyles(theme.colors);
   const navigation = useNavigation<any>();
   const [search, setSearch] = useState('');
-  const now = useMemo(() => new Date(), []);
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
+  const [today, setToday] = useState(() => new Date());
+  const initialDayKeyRef = useRef(getLocalDateKey(today));
+  const todayKey = useMemo(() => getLocalDateKey(today), [today]);
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
   const { data, isLoading, isRefetching, refetch, isError } =
     useMonthlyDevotionals(currentYear, currentMonth);
+
+  const syncToday = useCallback(() => {
+    setToday(previous => {
+      const next = new Date();
+      return getLocalDateKey(previous) === getLocalDateKey(next) ? previous : next;
+    });
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      syncToday();
+    }, [syncToday]),
+  );
+
+  useEffect(() => {
+    const nextMidnight = new Date(today);
+    nextMidnight.setHours(24, 0, 0, 0);
+
+    const timeoutId = setTimeout(() => {
+      setToday(new Date());
+    }, Math.max(1000, nextMidnight.getTime() - Date.now()));
+
+    return () => clearTimeout(timeoutId);
+  }, [today, todayKey]);
+
+  useEffect(() => {
+    if (todayKey === initialDayKeyRef.current) {
+      return;
+    }
+
+    refetch();
+  }, [todayKey, refetch]);
 
   const devotionalItems = useMemo(() => {
     if (!data) return [];
 
     return [...data]
+      .filter(item => getComparableDate(item.devotion_date) <= todayKey)
       .sort((a, b) => b.devotion_date.localeCompare(a.devotion_date))
       .map(item => {
         const memoryVerseSource =
@@ -50,7 +85,7 @@ export function DevotionalLatestTab() {
           sections: item.sections || {},
         };
       });
-  }, [data]);
+  }, [data, todayKey]);
 
   const filteredDevotionalItems = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -172,4 +207,16 @@ function formatDevotionalDate(dateValue?: string, dayName?: string) {
   });
 
   return dayName ? `${dayName}, ${formatted}` : formatted;
+}
+
+function getLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getComparableDate(dateValue?: string) {
+  if (!dateValue) return '';
+  return dateValue.slice(0, 10);
 }

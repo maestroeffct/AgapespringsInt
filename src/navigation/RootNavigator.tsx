@@ -147,6 +147,9 @@ export function RootNavigator() {
           <Stack.Screen
             name="DevotionalDetails"
             component={DevotionalDetailsScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
           />
         </Stack.Navigator>
       </NavigationContainer>

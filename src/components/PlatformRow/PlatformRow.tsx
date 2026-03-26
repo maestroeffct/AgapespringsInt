@@ -17,9 +17,22 @@ export function PlatformRow({ title, url, leftIcon }: Props) {
   const { theme } = useTheme();
 
   const open = async () => {
-    const can = await Linking.canOpenURL(url);
-    if (!can) return Alert.alert('Invalid link', url);
-    Linking.openURL(url);
+    try {
+      if (/^https?:\/\//i.test(url)) {
+        await Linking.openURL(url);
+        return;
+      }
+
+      const can = await Linking.canOpenURL(url);
+      if (!can) {
+        Alert.alert('Invalid link', url);
+        return;
+      }
+
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('Invalid link', url);
+    }
   };
 
   const copy = () => {

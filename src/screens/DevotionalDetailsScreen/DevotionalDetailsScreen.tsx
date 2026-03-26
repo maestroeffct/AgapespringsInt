@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   ImageBackground,
@@ -8,10 +8,15 @@ import {
   View,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 import { AppText } from '../../components/AppText/AppText';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
+import {
+  isDevotionalFavourite,
+  toggleDevotionalFavourite,
+} from '../../helpers/devotionalFavourites';
 import { getRemoteImageUri } from '../../helpers/imageSource';
 import type { DevotionalDetailsItem } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -64,6 +69,28 @@ export default function DevotionalDetailsScreen({ route, navigation }: Props) {
     Alert.alert('Coming Soon', 'Read-aloud is not available yet.');
   };
 
+  const syncLikedState = useCallback(() => {
+    let active = true;
+
+    (async () => {
+      const nextLiked = await isDevotionalFavourite(item.id);
+      if (active) {
+        setLiked(nextLiked);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [item.id]);
+
+  useFocusEffect(syncLikedState);
+
+  const handleToggleFavourite = useCallback(async () => {
+    const nextLiked = await toggleDevotionalFavourite(item);
+    setLiked(nextLiked);
+  }, [item]);
+
   const sections = useMemo(() => buildReaderSections(item), [item]);
 
   return (
@@ -95,13 +122,13 @@ export default function DevotionalDetailsScreen({ route, navigation }: Props) {
 
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => setLiked(prev => !prev)}
+                onPress={handleToggleFavourite}
                 style={styles.topIconBtn}
               >
                 <Ionicons
                   name={liked ? 'heart' : 'heart-outline'}
                   size={22}
-                  color={headerActionIconColor}
+                  color={liked ? theme.colors.primary : headerActionIconColor}
                 />
               </TouchableOpacity>
 
@@ -162,6 +189,8 @@ export default function DevotionalDetailsScreen({ route, navigation }: Props) {
               ) : null}
 
               <AppText
+                selectable
+                selectionColor={theme.colors.primary}
                 style={[
                   section.emphasis === 'verse'
                     ? styles.memoryVerse
@@ -180,7 +209,7 @@ export default function DevotionalDetailsScreen({ route, navigation }: Props) {
             <TouchableOpacity
               activeOpacity={0.9}
               style={styles.bottomAction}
-              onPress={() => setLiked(prev => !prev)}
+              onPress={handleToggleFavourite}
             >
               <Ionicons
                 name={liked ? 'heart' : 'heart-outline'}

@@ -54,7 +54,7 @@ export function AppDrawerNavigator() {
         component={WebScreen}
         initialParams={{
           title: 'Give - Agapesprings',
-          url: 'https://www.agapespringsint.com/give',
+          url: 'https://www.agapespringsint.com/giving',
         }}
         options={{ drawerItemStyle: { display: 'none' } }}
       />

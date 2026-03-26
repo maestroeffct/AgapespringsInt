@@ -11,7 +11,6 @@ export const createDevotionalLatestTabStyles = (colors: {
   StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: 16,
       backgroundColor: colors.background,
     },
     list: {

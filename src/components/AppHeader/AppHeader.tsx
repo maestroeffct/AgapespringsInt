@@ -5,6 +5,8 @@ import {
   Image,
   Animated,
   SafeAreaView,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
@@ -29,6 +31,9 @@ export function AppHeader({
 }: any) {
   const { theme, isDark } = useTheme();
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const androidTopInset =
+    Platform.OS === 'android' ? StatusBar.currentHeight ?? 0 : 0;
+  const headerIconColor = isDark ? theme.colors.textPrimary : '#000000';
 
   // 🔔 Animate badge when count changes
   useEffect(() => {
@@ -57,7 +62,13 @@ export function AppHeader({
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: theme.colors.background }]}
+      style={[
+        styles.safe,
+        {
+          backgroundColor: theme.colors.background,
+          paddingTop: androidTopInset,
+        },
+      ]}
     >
       <View
         style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -69,7 +80,7 @@ export function AppHeader({
               <Ionicons
                 name={leftType === 'menu' ? 'menu-outline' : 'arrow-back'}
                 size={26}
-                color={theme.colors.textPrimary}
+                color={headerIconColor}
               />
             </TouchableOpacity>
           )}
@@ -80,7 +91,7 @@ export function AppHeader({
             </View>
           ) : (
             title && (
-              <AppText variant="h2" style={{ color: theme.colors.textPrimary }}>
+              <AppText variant="h3" style={{ color: theme.colors.textPrimary }}>
                 {title}
               </AppText>
             )
@@ -95,7 +106,7 @@ export function AppHeader({
             <TouchableOpacity onPress={onRightPress} style={styles.iconBtn}>
               <Ionicons
                 name="notifications-outline"
-                color={theme.colors.textPrimary}
+                color={headerIconColor}
                 size={rightIconSize}
               />
 
@@ -111,7 +122,10 @@ export function AppHeader({
                 >
                   <AppText
                     variant="caption"
-                    style={[styles.badgeText, { color: theme.colors.surface }]}
+                    style={[
+                      styles.badgeText,
+                      { color: theme.colors.primaryText ?? '#FFFFFF' },
+                    ]}
                   >
                     {badgeCount}
                   </AppText>
@@ -125,7 +139,7 @@ export function AppHeader({
               <Ionicons
                 name={rightIconName}
                 size={rightIconSize}
-                color={theme.colors.textPrimary}
+                color={headerIconColor}
               />
             </TouchableOpacity>
           )}

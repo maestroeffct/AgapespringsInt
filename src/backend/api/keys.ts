@@ -12,5 +12,8 @@ export const queryKeys = {
   oneSoundInfinite: (size: number) =>
     ['onesound', 'latest', 'infinite', size] as const,
   churchLocations: ['church-locations'] as const,
+  devotionalToday: ['devotional', 'today'] as const,
+  devotionalMonthly: (year: number, month: number) =>
+    ['devotional', 'monthly', year, month] as const,
   testimonies: ['testimonies'] as const,
 };

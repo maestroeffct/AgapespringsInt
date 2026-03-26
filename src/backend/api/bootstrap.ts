@@ -5,14 +5,17 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 
-import { getItem, setItem, StorageKeys } from '@/helpers/storage';
+import { getItem, setItem, StorageKeys } from '../../helpers/storage';
 
 import { startupQueryOptions } from './queries';
 
 const STARTUP_PREFETCH_TIMEOUT_MS = 8000;
 const CACHE_PERSIST_DEBOUNCE_MS = 1000;
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T | null> {
   return Promise.race([
     promise,
     new Promise<null>(resolve => {
@@ -29,7 +32,9 @@ async function persistQueryCache(queryClient: QueryClient): Promise<void> {
   await setItem(StorageKeys.QUERY_CACHE, dehydrated);
 }
 
-export async function restoreQueryCache(queryClient: QueryClient): Promise<void> {
+export async function restoreQueryCache(
+  queryClient: QueryClient,
+): Promise<void> {
   const dehydrated = await getItem<DehydratedState>(StorageKeys.QUERY_CACHE);
   if (!dehydrated) return;
 
@@ -40,14 +45,18 @@ export async function prefetchStartupQueries(
   queryClient: QueryClient,
 ): Promise<void> {
   const prefetchTask = Promise.allSettled(
-    startupQueryOptions.map(buildQuery => queryClient.prefetchQuery(buildQuery() as any)),
+    startupQueryOptions.map(buildQuery =>
+      queryClient.prefetchQuery(buildQuery() as any),
+    ),
   );
 
   await withTimeout(prefetchTask, STARTUP_PREFETCH_TIMEOUT_MS);
   await persistQueryCache(queryClient);
 }
 
-export function startQueryCachePersistence(queryClient: QueryClient): () => void {
+export function startQueryCachePersistence(
+  queryClient: QueryClient,
+): () => void {
   let timer: ReturnType<typeof setTimeout> | null = null;
 
   const unsubscribe = queryClient.getQueryCache().subscribe(event => {

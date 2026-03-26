@@ -4,11 +4,10 @@ import { PlatformRow } from '../../components/PlatformRow/PlatformRow';
 import { useTheme } from '../../theme/ThemeProvider';
 
 const TV_ITEMS = [
-  // put your real tv links here
   {
-    title: 'Agapesprings TV',
-    url: 'https://www.agapespringsint.com/tv',
-    leftIcon: 'tv-outline',
+    title: 'Agapesprings Mixlr',
+    url: 'https://agapespringsglobal.mixlr.com/',
+    leftIcon: 'radio-outline',
   },
 ];
 

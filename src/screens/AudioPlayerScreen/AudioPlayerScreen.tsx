@@ -11,12 +11,13 @@ import {
   ImageBackground,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
   Animated,
   Modal,
   ScrollView,
+  Text,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import TrackPlayer, {
   RepeatMode,
@@ -33,6 +34,7 @@ import RNFS from 'react-native-fs';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 import { AppText } from '../../components/AppText/AppText';
+import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { getItem, setItem, StorageKeys } from '../../helpers/storage';
 import {
   getDownloadedAudioMap,
@@ -46,6 +48,7 @@ type AudioPlayerParams = {
   title?: string;
   author?: string;
   artwork?: string;
+  lyrics?: string;
   id?: string; // unique id for favorites/download name
   source?: 'onesound' | 'livingwaters';
   queue?: AudioQueueItem[];
@@ -57,6 +60,10 @@ const LOCAL_COVER_ARTWORK = require('../../assets/images/audio_cover.png');
 const MIN_PLAYBACK_RATE = 0.5;
 const MAX_PLAYBACK_RATE = 2;
 const PLAYBACK_RATE_STEP = 0.25;
+const COVER_SIZE = 290;
+const QUEUE_ITEM_HEIGHT = 62;
+const QUEUE_ITEM_GAP = 10;
+const QUEUE_ITEM_SPAN = QUEUE_ITEM_HEIGHT + QUEUE_ITEM_GAP;
 
 function formatTime(seconds: number) {
   const s = Math.max(0, Math.floor(seconds));
@@ -88,6 +95,7 @@ function queuesAreSame(existingQueue: Track[], incomingQueue: Track[]) {
 }
 
 export default function AudioPlayerScreen({ route, navigation }: any) {
+  const insets = useSafeAreaInsets();
   const routeParams: AudioPlayerParams = route?.params ?? {};
 
   const fallbackTrack = useMemo<AudioQueueItem>(
@@ -97,6 +105,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       title: routeParams.title ?? 'Audio',
       author: routeParams.author ?? '',
       artwork: routeParams.artwork,
+      lyrics: routeParams.lyrics,
       source: routeParams.source,
     }),
     [
@@ -105,6 +114,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       routeParams.title,
       routeParams.author,
       routeParams.artwork,
+      routeParams.lyrics,
       routeParams.source,
     ],
   );
@@ -121,6 +131,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         title: item.title,
         author: item.author,
         artwork: item.artwork,
+        lyrics: item.lyrics,
         source: item.source,
       }));
     }
@@ -158,11 +169,18 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
     typeof activeTrack?.artwork === 'string'
       ? activeTrack.artwork
       : fallbackTrack.artwork;
+  const activeLyrics =
+    typeof activeTrack?.description === 'string'
+      ? activeTrack.description
+      : fallbackTrack.lyrics ?? '';
   const activeSource =
     incomingQueue[initialQueueIndex]?.source ??
     routeParams.source ??
     fallbackTrack.source ??
     'livingwaters';
+  const isOneSoundTrack = activeSource === 'onesound';
+  const hasLyrics = activeLyrics.trim().length > 0;
+  const canSwipeToLyrics = isOneSoundTrack && hasLyrics;
 
   const playbackState = usePlaybackState();
   const progress = useProgress(250); // updates every 250ms
@@ -184,23 +202,32 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
   const [queueTracks, setQueueTracks] = useState<Track[]>([]);
   const [activeQueueIndex, setActiveQueueIndex] = useState<number | null>(null);
   const [loadingQueue, setLoadingQueue] = useState(false);
+  const [lyricsPage, setLyricsPage] = useState(0);
+  const swipeHintX = useRef(new Animated.Value(0)).current;
+  const swipeHintOpacity = useRef(new Animated.Value(0.6)).current;
+  const swipeScrollRef = useRef<ScrollView>(null);
+  const queueScrollRef = useRef<ScrollView>(null);
 
-  // waveform animation
-  const scaleAnim = useRef(new Animated.Value(0)).current;
   const hasRemoteArtwork =
     typeof activeArtwork === 'string' &&
     (activeArtwork.startsWith('http://') ||
       activeArtwork.startsWith('https://'));
 
   const bars = useMemo(() => {
-    // deterministic “fake waveform” bars
-    const count = 60;
-    const out = Array.from({ length: count }).map((_, i) => {
-      const v = (Math.sin(i * 0.55) + Math.sin(i * 0.19) + 2) / 4; // 0..1
-      return 10 + Math.floor(v * 42); // 10..52
-    });
-    return out;
+    const pattern = [
+      12, 38, 24, 16, 34, 24, 14, 18, 32, 26, 15, 24, 18, 34, 40, 28, 16, 22,
+      14, 16,
+    ];
+
+    return [...pattern, ...pattern.slice(0, -1).reverse()];
   }, []);
+
+  const playedBarsCount = useMemo(() => {
+    if (bars.length === 0 || progress.duration <= 0) return 0;
+
+    const ratio = Math.min(1, Math.max(0, progress.position / progress.duration));
+    return Math.round(ratio * bars.length);
+  }, [bars.length, progress.duration, progress.position]);
 
   const setup = useCallback(async () => {
     // Setup player + queue for the route that opened this screen.
@@ -218,6 +245,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       title: item.title,
       artist: item.author,
       artwork: item.artwork,
+      description: item.lyrics,
     }));
 
     const [existingQueue, existingActiveIndex, currentRepeatMode, currentRate] =
@@ -282,6 +310,56 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
     setShowRemoteArtwork(true);
   }, [activeArtwork, hasRemoteArtwork, artworkOpacity]);
 
+  useEffect(() => {
+    swipeScrollRef.current?.scrollTo({ x: 0, animated: false });
+    setLyricsPage(0);
+  }, [activeId]);
+
+  useEffect(() => {
+    if (!canSwipeToLyrics || lyricsPage !== 0) {
+      swipeHintX.stopAnimation();
+      swipeHintOpacity.stopAnimation();
+      return;
+    }
+
+    const animation = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(swipeHintX, {
+            toValue: 18,
+            duration: 850,
+            useNativeDriver: true,
+          }),
+          Animated.timing(swipeHintX, {
+            toValue: 0,
+            duration: 850,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(swipeHintOpacity, {
+            toValue: 1,
+            duration: 850,
+            useNativeDriver: true,
+          }),
+          Animated.timing(swipeHintOpacity, {
+            toValue: 0.45,
+            duration: 850,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    );
+
+    animation.start();
+
+    return () => {
+      animation.stop();
+      swipeHintX.setValue(0);
+      swipeHintOpacity.setValue(0.6);
+    };
+  }, [canSwipeToLyrics, lyricsPage, swipeHintOpacity, swipeHintX]);
+
   // Load favorite state
   useEffect(() => {
     (async () => {
@@ -301,17 +379,31 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
     })();
   }, [activeId]);
 
-  // Animate waveform fill smoothly based on progress ratio
   useEffect(() => {
-    const ratio =
-      progress.duration > 0 ? progress.position / progress.duration : 0;
+    if (!queueVisible || activeQueueIndex == null) return;
 
-    Animated.timing(scaleAnim, {
-      toValue: ratio,
-      duration: 220,
-      useNativeDriver: true, // we animate scaleX (supported)
-    }).start();
-  }, [progress.position, progress.duration, scaleAnim]);
+    const timeoutId = setTimeout(() => {
+      const targetOffset = Math.max(0, activeQueueIndex * QUEUE_ITEM_SPAN);
+      const stagedOffset = Math.max(
+        targetOffset,
+        targetOffset + QUEUE_ITEM_SPAN * 3,
+      );
+
+      queueScrollRef.current?.scrollTo({
+        y: stagedOffset,
+        animated: false,
+      });
+
+      requestAnimationFrame(() => {
+        queueScrollRef.current?.scrollTo({
+          y: targetOffset,
+          animated: true,
+        });
+      });
+    }, 160);
+
+    return () => clearTimeout(timeoutId);
+  }, [queueVisible, activeQueueIndex]);
 
   const isPlaying = playbackState.state === State.Playing;
 
@@ -466,18 +558,24 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       : 'Repeat All';
 
   return (
-    <ImageBackground
-      source={LOCAL_BACKGROUND}
-      blurRadius={24}
-      style={styles.bg}
+    <ScreenWrapper
+      padded={false}
+      statusBarStyle="light-content"
+      statusBarBackground="transparent"
+      style={styles.screen}
     >
+      <ImageBackground
+        source={LOCAL_BACKGROUND}
+        blurRadius={24}
+        style={styles.bg}
+      >
       {/* Dark overlay gradient */}
       <LinearGradient
         colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.75)']}
         style={StyleSheet.absoluteFill}
       />
 
-      <SafeAreaView style={styles.container}>
+      <View style={[styles.container, { paddingTop: insets.top + 6 }]}>
         {/* Top */}
         <View style={styles.topRow}>
           <TouchableOpacity
@@ -504,61 +602,126 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
         {/* Cover */}
         <View style={styles.coverWrap}>
-          <Image source={LOCAL_COVER_ARTWORK} style={styles.cover} />
-          {showRemoteArtwork ? (
-            <Animated.Image
-              source={{ uri: activeArtwork as string }}
-              style={[
-                styles.cover,
-                styles.coverOverlay,
-                { opacity: artworkOpacity },
-              ]}
-              onLoad={() => {
-                Animated.timing(artworkOpacity, {
-                  toValue: 1,
-                  duration: 450,
-                  useNativeDriver: true,
-                }).start();
-              }}
-              onError={() => {
-                artworkOpacity.setValue(0);
-                setShowRemoteArtwork(false);
-              }}
-            />
-          ) : null}
+          {canSwipeToLyrics ? (
+            <>
+              <ScrollView
+                ref={swipeScrollRef}
+                horizontal
+                pagingEnabled
+                style={styles.coverPager}
+                showsHorizontalScrollIndicator={false}
+                bounces={false}
+                overScrollMode="never"
+                decelerationRate="fast"
+                onMomentumScrollEnd={event => {
+                  const page = Math.round(
+                    event.nativeEvent.contentOffset.x / COVER_SIZE,
+                  );
+                  setLyricsPage(page);
+                }}
+                scrollEventThrottle={16}
+              >
+                <View style={styles.coverViewport}>
+                  <View style={styles.coverPage}>
+                    <Image source={LOCAL_COVER_ARTWORK} style={styles.cover} />
+                    {showRemoteArtwork ? (
+                      <Animated.Image
+                        source={{ uri: activeArtwork as string }}
+                        style={[
+                          styles.cover,
+                          styles.coverOverlay,
+                          { opacity: artworkOpacity },
+                        ]}
+                        onLoad={() => {
+                          Animated.timing(artworkOpacity, {
+                            toValue: 1,
+                            duration: 450,
+                            useNativeDriver: true,
+                          }).start();
+                        }}
+                        onError={() => {
+                          artworkOpacity.setValue(0);
+                          setShowRemoteArtwork(false);
+                        }}
+                      />
+                    ) : null}
+                  </View>
+
+                  <View style={styles.lyricsPage}>
+                    <AppText style={styles.lyricsHeader}>Lyrics</AppText>
+                    <ScrollView
+                      style={styles.lyricsScroll}
+                      contentContainerStyle={styles.lyricsContent}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      <AppText style={styles.lyricsText}>{activeLyrics}</AppText>
+                    </ScrollView>
+                  </View>
+                </View>
+              </ScrollView>
+
+              {lyricsPage === 0 ? (
+                <Animated.View
+                  style={[
+                    styles.swipeHintWrap,
+                    {
+                      opacity: swipeHintOpacity,
+                      transform: [{ translateX: swipeHintX }],
+                    },
+                  ]}
+                >
+                  <Text style={styles.swipeHintText}>
+                    Swipe {'>>>'} for Lyrics {'>>>'}
+                  </Text>
+                </Animated.View>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <Image source={LOCAL_COVER_ARTWORK} style={styles.cover} />
+              {showRemoteArtwork ? (
+                <Animated.Image
+                  source={{ uri: activeArtwork as string }}
+                  style={[
+                    styles.cover,
+                    styles.coverOverlay,
+                    { opacity: artworkOpacity },
+                  ]}
+                  onLoad={() => {
+                    Animated.timing(artworkOpacity, {
+                      toValue: 1,
+                      duration: 450,
+                      useNativeDriver: true,
+                    }).start();
+                  }}
+                  onError={() => {
+                    artworkOpacity.setValue(0);
+                    setShowRemoteArtwork(false);
+                  }}
+                />
+              ) : null}
+            </>
+          )}
         </View>
 
         {/* Waveform + time */}
         <View style={styles.waveWrap}>
           <View style={styles.waveRow}>
-            {/* base bars */}
             <View style={styles.waveBars}>
               {bars.map((h, i) => (
                 <View
                   key={i}
-                  style={[styles.waveBar, { height: h, opacity: 0.28 }]}
+                  style={[
+                    styles.waveBar,
+                    {
+                      height: h,
+                      backgroundColor:
+                        i < playedBarsCount ? '#FFFFFF' : 'rgba(255,255,255,0.28)',
+                    },
+                  ]}
                 />
               ))}
             </View>
-
-            {/* filled overlay bars (scaleX) */}
-            <Animated.View
-              style={[
-                styles.waveFill,
-                {
-                  transform: [
-                    { scaleX: scaleAnim },
-                    { translateX: 0 }, // keep simple
-                  ],
-                },
-              ]}
-            >
-              <View style={styles.waveBars}>
-                {bars.map((h, i) => (
-                  <View key={i} style={[styles.waveBar, { height: h }]} />
-                ))}
-              </View>
-            </Animated.View>
           </View>
 
           <View style={styles.timeRow}>
@@ -678,7 +841,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         <AppText style={styles.rateLabel}>
           Playback Speed: {Number(playbackRate.toFixed(2))}x
         </AppText>
-      </SafeAreaView>
+      </View>
 
       <Modal
         visible={queueVisible}
@@ -710,6 +873,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
               <AppText style={styles.queueMeta}>Queue is empty.</AppText>
             ) : (
               <ScrollView
+                ref={queueScrollRef}
                 style={styles.queueList}
                 contentContainerStyle={styles.queueListContent}
                 showsVerticalScrollIndicator={false}
@@ -733,12 +897,19 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
                         >
                           {track.title ?? 'Untitled Track'}
                         </AppText>
-                        <AppText style={styles.queueItemArtist} numberOfLines={1}>
+                        <AppText
+                          style={styles.queueItemArtist}
+                          numberOfLines={1}
+                        >
                           {track.artist ?? 'Unknown Artist'}
                         </AppText>
                       </View>
                       {isActive ? (
-                        <Ionicons name="volume-high" size={18} color="#FFD700" />
+                        <Ionicons
+                          name="volume-high"
+                          size={18}
+                          color="#FFD700"
+                        />
                       ) : (
                         <Ionicons name="play-outline" size={18} color="#fff" />
                       )}
@@ -750,11 +921,15 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
           </View>
         </View>
       </Modal>
-    </ImageBackground>
+      </ImageBackground>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   bg: { flex: 1, paddingHorizontal: 18 },
   container: { flex: 1, paddingHorizontal: 18 },
 
@@ -785,39 +960,88 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 22,
   },
+  coverPager: {
+    width: COVER_SIZE,
+    height: COVER_SIZE,
+    borderRadius: 18,
+    overflow: 'hidden',
+  },
+  coverViewport: {
+    width: COVER_SIZE * 2,
+    height: COVER_SIZE,
+    flexDirection: 'row',
+  },
+  coverPage: {
+    width: COVER_SIZE,
+    height: COVER_SIZE,
+    overflow: 'hidden',
+    borderRadius: 18,
+  },
   cover: {
-    width: 290,
-    height: 290,
+    width: COVER_SIZE,
+    height: COVER_SIZE,
     borderRadius: 18,
   },
   coverOverlay: {
     position: 'absolute',
+  },
+  lyricsPage: {
+    width: COVER_SIZE,
+    height: COVER_SIZE,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 10,
+  },
+  lyricsHeader: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  lyricsScroll: {
+    flex: 1,
+  },
+  lyricsContent: {
+    paddingBottom: 8,
+  },
+  lyricsText: {
+    color: 'rgba(255,255,255,0.92)',
+    lineHeight: 22,
+    textAlign: 'left',
+  },
+  swipeHintWrap: {
+    marginTop: 10,
+  },
+  swipeHintText: {
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 
   waveWrap: {
     marginTop: 22,
   },
   waveRow: {
-    height: 64,
+    height: 86,
+    width: '100%',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   waveBars: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 2,
+    width: '100%',
+    justifyContent: 'space-between',
   },
   waveBar: {
-    width: 3,
-    borderRadius: 2,
-    backgroundColor: '#fff',
-  },
-  waveFill: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    overflow: 'hidden',
-    transformOrigin: 'left',
+    width: 4,
+    borderRadius: 999,
   },
 
   timeRow: {
@@ -940,6 +1164,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   queueItem: {
+    minHeight: QUEUE_ITEM_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

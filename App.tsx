@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ThemeProvider } from './src/theme/ThemeProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -14,6 +14,10 @@ import {
 } from './src/notifications/notifee';
 import { setupNotificationListeners } from './src/notifications/listeners';
 import { registerPushToken } from './src/notifications/push';
+import {
+  restoreQueryCache,
+  startQueryCachePersistence,
+} from './src/backend/api/bootstrap';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -35,6 +39,31 @@ function maskToken(token: string) {
 }
 
 const App = () => {
+  const [isQueryCacheReady, setIsQueryCacheReady] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    let stopPersistence: undefined | (() => void);
+
+    const setupQueryCache = async () => {
+      try {
+        await restoreQueryCache(queryClient);
+      } finally {
+        stopPersistence = startQueryCachePersistence(queryClient);
+        if (isMounted) {
+          setIsQueryCacheReady(true);
+        }
+      }
+    };
+
+    setupQueryCache();
+
+    return () => {
+      isMounted = false;
+      stopPersistence?.();
+    };
+  }, []);
+
   useEffect(() => {
     let teardownNotifications: undefined | (() => void);
 
@@ -100,6 +129,11 @@ const App = () => {
       unsub();
     };
   }, []);
+
+  if (!isQueryCacheReady) {
+    return <View style={styles.cacheBootstrapScreen} />;
+  }
+
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
@@ -115,3 +149,10 @@ const App = () => {
 };
 
 export default App;
+
+const styles = StyleSheet.create({
+  cacheBootstrapScreen: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+});

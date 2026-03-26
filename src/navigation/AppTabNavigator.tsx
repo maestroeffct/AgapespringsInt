@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Platform } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import HomeScreen from '../screens/HomeScreen/HomeScreen';
 import LivingWatersScreen from '../screens/LivingWaters/LivingWatersScreen';
@@ -10,6 +11,7 @@ import {
   APP_TAB_BAR_HEIGHT,
   APP_TAB_BAR_PADDING_BOTTOM,
   APP_TAB_BAR_PADDING_TOP,
+  ANDROID_TAB_BAR_EXTRA_BOTTOM,
 } from './bottomTabMetrics';
 // import AudioPlayerScreen from '../screens/AudioPlayerScreen/AudioPlayerScreen';
 
@@ -28,6 +30,8 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 export function AppTabNavigator() {
   const { theme } = useTheme();
+  const androidBottomInset =
+    Platform.OS === 'android' ? ANDROID_TAB_BAR_EXTRA_BOTTOM : 0;
 
   return (
     <Tab.Navigator
@@ -38,9 +42,9 @@ export function AppTabNavigator() {
         tabBarStyle: {
           backgroundColor: theme.colors.background,
           borderTopColor: theme.colors.border,
-          height: APP_TAB_BAR_HEIGHT,
+          height: APP_TAB_BAR_HEIGHT + androidBottomInset,
           paddingTop: APP_TAB_BAR_PADDING_TOP,
-          paddingBottom: APP_TAB_BAR_PADDING_BOTTOM,
+          paddingBottom: APP_TAB_BAR_PADDING_BOTTOM + androidBottomInset,
         },
         tabBarLabelStyle: {
           fontSize: 12,

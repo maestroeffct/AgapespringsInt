@@ -4,7 +4,7 @@ import { Text, TextProps, StyleProp, TextStyle } from 'react-native';
 import { useTypography } from '../../helpers/useTypography';
 
 type FontVariant = 'inter' | 'satoshi' | 'geomanist' | 'poppins';
-type TextVariant = 'h1' | 'h2' | 'body' | 'caption';
+type TextVariant = 'h1' | 'h2' | 'h3' | 'body' | 'caption';
 
 type AppTextProps = TextProps & {
   children: React.ReactNode;

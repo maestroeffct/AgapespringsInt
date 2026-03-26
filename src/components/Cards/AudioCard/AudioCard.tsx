@@ -12,6 +12,7 @@ import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
 import { useTheme } from '../../../theme/ThemeProvider';
 import { palette } from '../../../theme/colors';
+import { getRemoteImageUri } from '../../../helpers/imageSource';
 
 const FALLBACK = require('../../../assets/images/audio_cover.png');
 
@@ -41,13 +42,14 @@ export function AudioCard({
   const { isDark } = useTheme();
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
+  const remoteThumbnailUri = getRemoteImageUri(thumbnail);
 
   const isHorizontal = layout === 'horizontal';
 
   useEffect(() => {
     remoteOpacity.setValue(0);
-    setShouldRenderRemote(!!thumbnail);
-  }, [thumbnail, remoteOpacity]);
+    setShouldRenderRemote(!!remoteThumbnailUri);
+  }, [remoteOpacity, remoteThumbnailUri]);
 
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
@@ -72,9 +74,9 @@ export function AudioCard({
             resizeMode="cover"
           />
 
-          {shouldRenderRemote && thumbnail ? (
+          {shouldRenderRemote && remoteThumbnailUri ? (
             <Animated.Image
-              source={{ uri: thumbnail }}
+              source={{ uri: remoteThumbnailUri }}
               style={[styles.imageFill, { opacity: remoteOpacity }]}
               resizeMode="cover"
               onLoad={() => {

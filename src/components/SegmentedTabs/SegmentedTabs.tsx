@@ -1,9 +1,13 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { AppText } from '../../components/AppText/AppText';
-import styles from './styles';
+import { useTheme } from '../../theme/ThemeProvider';
+import { createStyles } from './styles';
 
 export function SegmentedTabs({ tabs, active, onChange }: any) {
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme.colors, isDark);
+
   return (
     <View style={styles.container}>
       {tabs.map((tab: any) => {

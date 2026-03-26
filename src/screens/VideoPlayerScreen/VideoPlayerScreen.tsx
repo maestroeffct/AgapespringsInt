@@ -12,7 +12,11 @@ import YoutubePlayer from 'react-native-youtube-iframe';
 import { AppText } from '../../components/AppText/AppText';
 import { useTheme } from '../../theme/ThemeProvider';
 import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
-import { useGetTestimonyVideosQuery } from '../../backend/api/youtube';
+import {
+  useGetLatestFromChannelQuery,
+  useGetSermonVideosQuery,
+  useGetTestimonyVideosQuery,
+} from '../../backend/api/youtube';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 // import { AppHeader } from '../../components/AppHeader/AppHeader';
 
@@ -26,15 +30,47 @@ export default function VideoPlayerScreen({ route, navigation }: Props) {
   const { width: windowWidth } = useWindowDimensions();
   const routeVideoId: string | undefined = route?.params?.videoId;
   const routeTitle: string | undefined = route?.params?.title;
+  const routeSource:
+    | 'latest'
+    | 'testimony'
+    | 'broadcast'
+    | undefined = route?.params?.source;
 
   const [playing, setPlaying] = useState(true);
 
-  const { data, isLoading } = useGetTestimonyVideosQuery({ maxResults: 50 });
-  const items = useMemo(() => data?.items ?? [], [data]);
+  const { data: latestData, isLoading: latestLoading } =
+    useGetLatestFromChannelQuery({ maxResults: 50 });
+  const { data: testimonyData, isLoading: testimonyLoading } =
+    useGetTestimonyVideosQuery({ maxResults: 50 });
+  const { data: broadcastData, isLoading: broadcastLoading } =
+    useGetSermonVideosQuery({ maxResults: 50 });
+
   const getVideoId = (item: any): string | undefined =>
     item?.snippet?.resourceId?.videoId ??
     item?.contentDetails?.videoId ??
     item?.id?.videoId;
+  const items = useMemo(() => {
+    if (routeSource === 'testimony') {
+      return testimonyData?.items ?? [];
+    }
+
+    if (routeSource === 'broadcast') {
+      return broadcastData?.items ?? [];
+    }
+
+    return latestData?.items ?? [];
+  }, [broadcastData?.items, latestData?.items, routeSource, testimonyData?.items]);
+  const isLoading = useMemo(() => {
+    if (routeSource === 'testimony') {
+      return testimonyLoading;
+    }
+
+    if (routeSource === 'broadcast') {
+      return broadcastLoading;
+    }
+
+    return latestLoading;
+  }, [broadcastLoading, latestLoading, routeSource, testimonyLoading]);
   const fallbackVideoId = useMemo(
     () => items.map(getVideoId).find(Boolean) as string | undefined,
     [items],
@@ -132,6 +168,12 @@ export default function VideoPlayerScreen({ route, navigation }: Props) {
           style={[styles.divider, { backgroundColor: theme.colors.border }]}
         />
 
+        <AppText
+          style={[styles.recentTitle, { color: theme.colors.textPrimary }]}
+        >
+          Recent Videos
+        </AppText>
+
         <FlatList
           data={isLoading ? [] : related}
           keyExtractor={(item: any, index) =>
@@ -161,6 +203,7 @@ export default function VideoPlayerScreen({ route, navigation }: Props) {
                     navigation.replace('VideoPlayer', {
                       videoId,
                       title: item?.snippet?.title,
+                      source: routeSource,
                     })
                   }
                 />
@@ -178,7 +221,7 @@ const styles = StyleSheet.create({
   // root: { flex: 1 },
 
   container: {
-    paddingTop: 50,
+    paddingTop: 20,
   },
 
   topBar: {
@@ -225,6 +268,13 @@ const styles = StyleSheet.create({
   },
   relatedRow: {
     paddingHorizontal: 14,
+  },
+  recentTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 8,
   },
 
   titleRow: {

@@ -9,46 +9,56 @@ export function createTypography(colors: Colors) {
   return {
     satoshi: {
       h1: {
-        fontFamily: FontFamily.satoshi.bold,
+        fontFamily: FontFamily.inter.bold,
         fontSize: 32,
         color: colors.textPrimary,
       },
       h2: {
-        fontFamily: FontFamily.satoshi.bold,
+        fontFamily: FontFamily.inter.semibold,
         fontSize: 24,
         color: colors.textPrimary,
       },
+      h3: {
+        fontFamily: FontFamily.inter.semibold,
+        fontSize: 18,
+        color: colors.textPrimary,
+      },
       body: {
-        fontFamily: FontFamily.satoshi.regular,
-        fontSize: 16,
+        fontFamily: FontFamily.inter.regular,
+        fontSize: 14,
         color: colors.textPrimary,
       },
       caption: {
-        fontFamily: FontFamily.satoshi.regular,
-        fontSize: 12,
+        fontFamily: FontFamily.inter.regular,
+        fontSize: 5,
         color: colors.textSecondary,
       },
     },
 
     geomanist: {
       h1: {
-        fontFamily: FontFamily.geomanist.bold,
+        fontFamily: FontFamily.inter.bold,
         fontSize: 32,
         color: colors.textPrimary,
       },
       h2: {
-        fontFamily: FontFamily.geomanist.bold,
+        fontFamily: FontFamily.inter.semibold,
         fontSize: 24,
         color: colors.textPrimary,
       },
+      h3: {
+        fontFamily: FontFamily.inter.semibold,
+        fontSize: 18,
+        color: colors.textPrimary,
+      },
       body: {
-        fontFamily: FontFamily.geomanist.regular,
-        fontSize: 16,
+        fontFamily: FontFamily.inter.regular,
+        fontSize: 14,
         color: colors.textPrimary,
       },
       caption: {
-        fontFamily: FontFamily.geomanist.medium,
-        fontSize: 12,
+        fontFamily: FontFamily.inter.regular,
+        fontSize: 5,
         color: colors.textSecondary,
       },
     },
@@ -64,37 +74,47 @@ export function createTypography(colors: Colors) {
         fontSize: 24,
         color: colors.textPrimary,
       },
+      h3: {
+        fontFamily: FontFamily.inter.semibold,
+        fontSize: 18,
+        color: colors.textPrimary,
+      },
       body: {
         fontFamily: FontFamily.inter.regular,
-        fontSize: 16,
+        fontSize: 14,
         color: colors.textPrimary,
       },
       caption: {
-        fontFamily: FontFamily.inter.medium,
-        fontSize: 12,
+        fontFamily: FontFamily.inter.regular,
+        fontSize: 5,
         color: colors.textSecondary,
       },
     },
 
     poppins: {
       h1: {
-        fontFamily: FontFamily.poppins.bold,
+        fontFamily: FontFamily.inter.bold,
         fontSize: 32,
         color: colors.textPrimary,
       },
       h2: {
-        fontFamily: FontFamily.poppins.semibold,
+        fontFamily: FontFamily.inter.semibold,
         fontSize: 24,
         color: colors.textPrimary,
       },
+      h3: {
+        fontFamily: FontFamily.inter.semibold,
+        fontSize: 18,
+        color: colors.textPrimary,
+      },
       body: {
-        fontFamily: FontFamily.poppins.regular,
+        fontFamily: FontFamily.inter.regular,
         fontSize: 14,
         color: colors.textPrimary,
       },
       caption: {
-        fontFamily: FontFamily.poppins.medium,
-        fontSize: 12,
+        fontFamily: FontFamily.inter.regular,
+        fontSize: 5,
         color: colors.textSecondary,
       },
     },

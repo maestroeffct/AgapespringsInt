@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { View, Animated, Dimensions } from 'react-native';
 import styles from './styles';
 import { useCarousel } from '../../backend/api/hooks/useCarousel';
+import { getRemoteImageUri } from '../../helpers/imageSource';
 
 const { width } = Dimensions.get('window');
 const AUTO_SCROLL_INTERVAL = 4000;
@@ -65,6 +66,7 @@ export function HeroCarousel() {
           setActiveIndex(i);
         }}
         renderItem={({ item, index }) => {
+          const remoteUri = getRemoteImageUri(item.file_path);
           const inputRange = [
             (index - 1) * width,
             index * width,
@@ -85,8 +87,8 @@ export function HeroCarousel() {
             <View style={styles.slide}>
               <Animated.Image
                 source={
-                  item.file_path
-                    ? { uri: item.file_path }
+                  remoteUri
+                    ? { uri: remoteUri }
                     : require('../../assets/images/hero1.png')
                 }
                 style={[

@@ -22,14 +22,13 @@ export const createDevotionalLatestTabStyles = (colors: {
       backgroundColor: colors.background,
       paddingBottom: 24,
     },
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: colors.imageOverlay,
+    stateWrap: {
+      flexGrow: 1,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 24,
     },
-    overlayCard: {
+    stateCard: {
       width: '100%',
       maxWidth: 320,
       backgroundColor: colors.surface,
@@ -40,12 +39,12 @@ export const createDevotionalLatestTabStyles = (colors: {
       paddingVertical: 28,
       alignItems: 'center',
     },
-    overlayTitle: {
+    stateTitle: {
       color: colors.textPrimary,
       textAlign: 'center',
       marginBottom: 8,
     },
-    overlayMessage: {
+    stateMessage: {
       color: colors.textSecondary,
       textAlign: 'center',
       lineHeight: 22,

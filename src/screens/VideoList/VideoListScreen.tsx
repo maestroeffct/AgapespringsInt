@@ -57,6 +57,7 @@ export default function VideoListScreen({ navigation }: any) {
                 navigation.navigate('VideoPlayer', {
                   videoId,
                   title: item.snippet.title,
+                  source: 'latest',
                 })
               }
             />

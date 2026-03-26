@@ -1,29 +1,22 @@
-import React, { memo, useRef, useState } from 'react';
+import React, { memo, useMemo, useRef, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useTheme } from '../../theme/ThemeProvider';
+import { createStyles } from './resourcesStyles';
 
 const RESOURCES_SOURCE = {uri: 'https://www.agapespringsint.com/resources'};
 
 export const ResourcesTabContent = memo(function ResourcesTabContent() {
   const webRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       {loading && (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10,
-          }}
-        >
-          <ActivityIndicator />
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       )}
 
@@ -36,6 +29,7 @@ export const ResourcesTabContent = memo(function ResourcesTabContent() {
         javaScriptEnabled
         domStorageEnabled
         allowsBackForwardNavigationGestures
+        pullToRefreshEnabled
       />
     </View>
   );

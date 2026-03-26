@@ -1,32 +1,42 @@
 import { StyleSheet } from 'react-native';
+import type { lightTheme } from '../../theme/lightTheme';
+import { palette, withOpacity } from '../../theme/colors';
 
-export default StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 6,
-    backgroundColor: '#F2F2F2',
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
+type SegmentedTabColors = typeof lightTheme.colors;
 
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
+export const createStyles = (
+  colors: SegmentedTabColors,
+  isDark: boolean,
+) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      marginHorizontal: 16,
+      marginTop: 8,
+      borderRadius: 6,
+      backgroundColor: isDark ? palette.gray900 : colors.surface,
+      overflow: 'hidden',
+      marginBottom: 12,
+      borderWidth: isDark ? 1 : 0,
+      borderColor: isDark ? withOpacity(palette.white, 0.08) : colors.border,
+    },
 
-  activeTab: {
-    backgroundColor: '#8B1538', // brand wine
-  },
+    tab: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
 
-  text: {
-    color: '#777',
-  },
+    activeTab: {
+      backgroundColor: colors.primary,
+    },
 
-  activeText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-});
+    text: {
+      color: colors.textSecondary,
+    },
+
+    activeText: {
+      color: colors.primaryText,
+      fontWeight: '600',
+    },
+  });

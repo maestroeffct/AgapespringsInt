@@ -20,6 +20,7 @@ import { AppText } from '../AppText/AppText';
 import { useTheme } from '../../theme/ThemeProvider';
 import {
   APP_TAB_BAR_HEIGHT,
+  ANDROID_TAB_BAR_EXTRA_BOTTOM,
   MINI_PLAYER_GAP,
 } from '../../navigation/bottomTabMetrics';
 
@@ -32,6 +33,8 @@ type Props = {
 export function MiniPlayer({ onPress }: Props) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const androidTabInset =
+    Platform.OS === 'android' ? ANDROID_TAB_BAR_EXTRA_BOTTOM : 0;
   const track = useActiveTrack();
   const playback = usePlaybackState();
   const { position, duration } = useProgress(500);
@@ -59,7 +62,13 @@ export function MiniPlayer({ onPress }: Props) {
       pointerEvents="box-none"
       style={[
         styles.root,
-        { bottom: insets.bottom + APP_TAB_BAR_HEIGHT + MINI_PLAYER_GAP },
+        {
+          bottom:
+            insets.bottom +
+            APP_TAB_BAR_HEIGHT +
+            androidTabInset +
+            MINI_PLAYER_GAP,
+        },
       ]}
     >
       <TouchableOpacity

@@ -3,6 +3,7 @@ import { View, Image, TouchableOpacity, Animated } from 'react-native';
 
 import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
+import { getRemoteImageUri } from '../../../helpers/imageSource';
 
 type TestimonyCardProps = {
   thumbnail?: any;
@@ -21,13 +22,14 @@ export function TestimonyCard({
 }: TestimonyCardProps) {
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
+  const remoteThumbnailUri = getRemoteImageUri(thumbnail);
 
   useEffect(() => {
     // reset when thumbnail changes
     remoteOpacity.setValue(0);
     setShouldRenderRemote(false);
 
-    if (!thumbnail) return;
+    if (!remoteThumbnailUri) return;
 
     // optional delay BEFORE we even try to show remote
     const timer = setTimeout(() => {
@@ -36,7 +38,7 @@ export function TestimonyCard({
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [thumbnail, remoteOpacity]);
+  }, [remoteOpacity, remoteThumbnailUri]);
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
       <View style={[full ? styles.fullCard : styles.card]}>
@@ -50,9 +52,9 @@ export function TestimonyCard({
           />
 
           {/* Remote fades IN over fallback (no fade-out, no blink) */}
-          {shouldRenderRemote && !!thumbnail && (
+          {shouldRenderRemote && !!remoteThumbnailUri && (
             <Animated.Image
-              source={{ uri: thumbnail }}
+              source={{ uri: remoteThumbnailUri }}
               style={[styles.imageFill, { opacity: remoteOpacity }]}
               resizeMode="cover"
               onLoad={() => {

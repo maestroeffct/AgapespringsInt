@@ -26,8 +26,8 @@ export default function createStyles(colors: ThemeColors, isDark: boolean) {
       paddingBottom: 24,
     },
     card: {
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
+      backgroundColor: isDark ? colors.background : colors.surface,
+      borderColor: isDark ? colors.primary : colors.border,
       borderWidth: 1,
       borderRadius: 14,
       paddingHorizontal: 18,
@@ -53,7 +53,7 @@ export default function createStyles(colors: ThemeColors, isDark: boolean) {
       marginBottom: 8,
     },
     phoneText: {
-      color: colors.primary,
+      color: isDark ? colors.textPrimary : colors.primary,
       fontSize: 16,
       textTransform: 'none',
     },

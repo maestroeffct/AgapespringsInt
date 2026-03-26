@@ -22,6 +22,7 @@ import TrackPlayer from 'react-native-track-player';
 import NotificationsScreen from '../screens/NotificationsScreen/NotificationScreen';
 import VideoPlayerScreen from '../screens/VideoPlayerScreen/VideoPlayerScreen';
 import UpdateRequiredScreen from '../screens/UpdateRequired/UpdateRequiredScreen';
+import DevotionalDetailsScreen from '../screens/DevotionalDetailsScreen/DevotionalDetailsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 type NavState = NavigationState | PartialState<NavigationState> | undefined;
@@ -143,6 +144,10 @@ export function RootNavigator() {
           <Stack.Screen name="AudioPlayer" component={AudioPlayerScreen} />
           <Stack.Screen name="VideoPlayer" component={VideoPlayerScreen} />
           <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          <Stack.Screen
+            name="DevotionalDetails"
+            component={DevotionalDetailsScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
 

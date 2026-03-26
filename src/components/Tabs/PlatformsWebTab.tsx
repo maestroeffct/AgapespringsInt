@@ -6,7 +6,7 @@ import { useTheme } from '../../theme/ThemeProvider';
 const WEB_ITEMS = [
   {
     title: 'YouTube',
-    url: 'https://youtube.com/@agapespringsint',
+    url: 'https://youtube.com/@barnabasalumogie1',
     leftIcon: 'logo-youtube',
   },
   {

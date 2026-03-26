@@ -5,6 +5,7 @@ import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
 import { useTheme } from '../../../theme/ThemeProvider';
 import { palette } from '../../../theme/colors';
+import { getRemoteImageUri } from '../../../helpers/imageSource';
 
 type VideoCardProps = {
   thumbnail?: string;
@@ -28,19 +29,20 @@ export function VideoCard({
   const { isDark } = useTheme();
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
+  const remoteThumbnailUri = getRemoteImageUri(thumbnail);
 
   useEffect(() => {
     remoteOpacity.setValue(0);
     setShouldRenderRemote(false);
 
-    if (!thumbnail) return;
+    if (!remoteThumbnailUri) return;
 
     const timer = setTimeout(() => {
       setShouldRenderRemote(true);
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [thumbnail, remoteOpacity]);
+  }, [remoteOpacity, remoteThumbnailUri]);
 
   const isHorizontal = layout === 'horizontal';
 
@@ -61,9 +63,9 @@ export function VideoCard({
             resizeMode="cover"
           />
 
-          {shouldRenderRemote && !!thumbnail && (
+          {shouldRenderRemote && !!remoteThumbnailUri && (
             <Animated.Image
-              source={{ uri: thumbnail }}
+              source={{ uri: remoteThumbnailUri }}
               style={[styles.imageFill, { opacity: remoteOpacity }]}
               resizeMode="cover"
               onLoad={() => {

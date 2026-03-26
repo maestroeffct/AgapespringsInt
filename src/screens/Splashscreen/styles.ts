@@ -16,6 +16,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 18,
   },
+
+  taglineLight: {
+    color: '#000000',
+  },
+
+  taglineDark: {
+    color: '#FFFFFF',
+  },
 });
 
 export default styles;

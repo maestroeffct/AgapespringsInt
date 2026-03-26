@@ -75,6 +75,7 @@ export function LivingWatersVideoTab() {
                   navigation.navigate('VideoPlayer', {
                     videoId,
                     title: item.snippet.title,
+                    source: 'latest',
                   })
                 }
                 date={

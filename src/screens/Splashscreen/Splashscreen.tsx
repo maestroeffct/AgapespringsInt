@@ -11,10 +11,13 @@ import { getItem, StorageKeys } from '../../helpers/storage';
 import { getInstalledAppVersion, compareVersions } from '../../helpers/appVersion';
 import { getAppConfig } from '../../backend/api/config';
 import { Platform } from 'react-native';
+import { useTheme } from '../../theme/ThemeProvider';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
 export function SplashScreen({ navigation }: Props) {
+  const { isDark } = useTheme();
+
   useEffect(() => {
     let isMounted = true;
 
@@ -83,7 +86,11 @@ export function SplashScreen({ navigation }: Props) {
           resizeMode="contain"
         />
 
-        <AppText font="poppins" variant="h2" style={styles.tagline}>
+        <AppText
+          font="poppins"
+          variant="h2"
+          style={[styles.tagline, isDark ? styles.taglineDark : styles.taglineLight]}
+        >
           Grace | Mindset | Profit
         </AppText>
       </View>

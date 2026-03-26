@@ -4,7 +4,22 @@ export type AudioQueueItem = {
   title?: string;
   author?: string;
   artwork?: string;
+  lyrics?: string;
   source?: 'onesound' | 'livingwaters';
+};
+
+export type DevotionalDetailsItem = {
+  id: string;
+  title: string;
+  author?: string;
+  date?: string;
+  thumbnail?: string;
+  memoryVerse?: string;
+  bibleReading?: string;
+  body?: string;
+  furtherStudy?: string;
+  prayer?: string;
+  sections?: Record<string, string>;
 };
 
 export type RootStackParamList = {
@@ -16,6 +31,9 @@ export type RootStackParamList = {
     currentVersion: string;
     minimumVersion: string;
     storeUrl: string;
+  };
+  DevotionalDetails: {
+    item: DevotionalDetailsItem;
   };
 
   VideoList: undefined;
@@ -34,6 +52,7 @@ export type RootStackParamList = {
     title?: string;
     author?: string;
     artwork?: string;
+    lyrics?: string;
     source?: 'onesound' | 'livingwaters';
     queue?: AudioQueueItem[];
     startIndex?: number;
@@ -43,6 +62,7 @@ export type RootStackParamList = {
     | {
         videoId?: string;
         title?: string;
+        source?: 'latest' | 'testimony' | 'broadcast';
       }
     | undefined;
 };

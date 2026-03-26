@@ -40,7 +40,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <DrawerContentScrollView
         {...props}
-        contentContainerStyle={{ paddingHorizontal: 16 }}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* LOGO HEADER */}
         <View style={styles.header}>

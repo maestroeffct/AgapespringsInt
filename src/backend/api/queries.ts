@@ -39,6 +39,50 @@ export type ChurchLocationItem = {
   map_url: string;
 };
 
+type DevotionalApiItem = {
+  id: number;
+  devotionDate: string;
+  dayName: string;
+  monthNumber: number;
+  yearNumber: number;
+  title: string;
+  bibleReading: string;
+  memoryVerse: string;
+  body: string;
+  furtherStudy: string;
+  prayer: string;
+  sections?: Record<string, string>;
+  rawText?: string;
+};
+
+type DevotionalTodayApiResponse = {
+  success: boolean;
+  data: DevotionalApiItem;
+  message?: string;
+};
+
+export type DevotionalTodayItem = {
+  id: string;
+  devotion_date: string;
+  day_name: string;
+  month_number: number;
+  year_number: number;
+  title: string;
+  bible_reading: string;
+  memory_verse: string;
+  body: string;
+  further_study: string;
+  prayer: string;
+  sections: Record<string, string>;
+  raw_text: string;
+};
+
+type DevotionalMonthlyApiResponse = {
+  success: boolean;
+  data: DevotionalApiItem[];
+  message?: string;
+};
+
 export const carouselQueryOptions = () =>
   queryOptions({
     queryKey: queryKeys.carousel,
@@ -72,6 +116,54 @@ export const churchLocationsQueryOptions = () =>
     },
     staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+  });
+
+const mapDevotionalItem = (
+  item: DevotionalApiItem,
+): DevotionalTodayItem => ({
+  id: String(item.id),
+  devotion_date: item.devotionDate,
+  day_name: item.dayName,
+  month_number: item.monthNumber,
+  year_number: item.yearNumber,
+  title: item.title ?? '',
+  bible_reading: item.bibleReading ?? '',
+  memory_verse: item.memoryVerse ?? '',
+  body: item.body ?? '',
+  further_study: item.furtherStudy ?? '',
+  prayer: item.prayer ?? '',
+  sections: item.sections ?? {},
+  raw_text: item.rawText ?? '',
+});
+
+export const devotionalTodayQueryOptions = () =>
+  queryOptions({
+    queryKey: queryKeys.devotionalToday,
+    queryFn: async (): Promise<DevotionalTodayItem> => {
+      const res = await apiGet<DevotionalTodayApiResponse>('/devotion/daily/today');
+
+      return mapDevotionalItem(res.data);
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+  });
+
+export const devotionalMonthlyQueryOptions = (year: number, month: number) =>
+  queryOptions({
+    queryKey: queryKeys.devotionalMonthly(year, month),
+    queryFn: async (): Promise<DevotionalTodayItem[]> => {
+      const res = await apiGet<DevotionalMonthlyApiResponse>(
+        `/devotion/monthly/${year}/${month}`,
+      );
+
+      return (res.data ?? []).map(mapDevotionalItem);
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
     refetchOnMount: false,
     refetchOnReconnect: true,
   });

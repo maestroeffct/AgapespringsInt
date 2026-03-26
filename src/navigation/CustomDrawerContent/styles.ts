@@ -1,6 +1,10 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 28,
+  },
   header: {
     alignItems: 'center',
     paddingVertical: 24,
@@ -12,13 +16,14 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: '#E5E5E5',
-    marginVertical: 12,
+    marginVertical: 16,
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 16,
     gap: 14,
+    marginVertical: 2,
   },
   itemText: {
     flex: 1,

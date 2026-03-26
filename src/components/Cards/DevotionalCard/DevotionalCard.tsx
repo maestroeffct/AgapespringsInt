@@ -3,13 +3,13 @@ import { Image, TouchableOpacity, View } from 'react-native';
 import { AppText } from '../../AppText/AppText';
 import { useTheme } from '../../../theme/ThemeProvider';
 import styles from './styles';
+import { getRemoteImageUri } from '../../../helpers/imageSource';
 
 type Props = {
   title: string;
   excerpt?: string;
   author?: string;
   date?: string;
-  category?: string;
   thumbnail?: string;
   onPress?: () => void;
 };
@@ -21,18 +21,18 @@ export function DevotionalCard({
   excerpt,
   author,
   date,
-  category,
   thumbnail,
   onPress,
 }: Props) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
+  const remoteThumbnailUri = getRemoteImageUri(thumbnail);
 
   return (
     <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
       <View style={[styles.row, { borderBottomColor: theme.colors.border }]}>
         <View style={styles.left}>
           <AppText
-            style={[styles.title, { color: theme.colors.textPrimary }]}
+            style={[styles.title, { color: isDark ? '#FFFFFF' : '#111111' }]}
             numberOfLines={2}
           >
             {title}
@@ -41,7 +41,7 @@ export function DevotionalCard({
           {!!excerpt && (
             <AppText
               style={[styles.excerpt, { color: theme.colors.textSecondary }]}
-              numberOfLines={2}
+              numberOfLines={3}
             >
               {excerpt}
             </AppText>
@@ -57,21 +57,19 @@ export function DevotionalCard({
               </AppText>
             )}
 
-            {(!!date || !!category) && (
+            {!!date && (
               <AppText
                 style={[styles.meta2, { color: theme.colors.textSecondary }]}
                 numberOfLines={1}
               >
-                {date ? `${date}` : ''}
-                {date && category ? '  •  ' : ''}
-                {category ? category : ''}
+                {date}
               </AppText>
             )}
           </View>
         </View>
 
         <Image
-          source={thumbnail ? { uri: thumbnail } : FALLBACK}
+          source={remoteThumbnailUri ? { uri: remoteThumbnailUri } : FALLBACK}
           style={styles.thumb}
           resizeMode="cover"
         />

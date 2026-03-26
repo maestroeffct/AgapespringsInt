@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { HeroCarousel } from '../../components/HeroCarousel/HeroCarousel';
 import { SectionHeader } from '../../components/SectionHeader/SectionHeader';
@@ -14,6 +14,7 @@ import {
   useGetTestimonyVideosQuery,
 } from '../../backend/api/youtube';
 import { useAudioSermon } from '../../backend/api/hooks/useAudioSermon';
+import { styles } from './latestTabStyles';
 
 const PLACEHOLDER_COUNT = 10;
 
@@ -78,6 +79,7 @@ export function LatestTabContent() {
                     navigation.navigate('VideoPlayer', {
                       videoId,
                       title: item?.snippet?.title,
+                      source: 'latest',
                     })
                   }
                 />
@@ -143,12 +145,15 @@ export function LatestTabContent() {
                     navigation.navigate('VideoPlayer', {
                       videoId,
                       title: item?.snippet?.title,
+                      source: 'testimony',
                     })
                   }
                 />
               );
             })}
       </ScrollView>
+
+      <View style={styles.bottomSpacer} />
     </>
   );
 }

@@ -21,6 +21,7 @@ export default function PlatformsScreen({ navigation }: any) {
         showLogo={false}
         leftType="back"
         onLeftPress={() => navigation.goBack()}
+        rightType={'none'}
       />
 
       <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -50,7 +51,7 @@ export default function PlatformsScreen({ navigation }: any) {
         >
           <Tab.Screen name="Web" component={PlatformsWebTab} />
           <Tab.Screen name="Radio" component={PlatformsRadioTab} />
-          <Tab.Screen name="TV" component={PlatformsTvTab} />
+          <Tab.Screen name="Mixlr" component={PlatformsTvTab} />
         </Tab.Navigator>
       </View>
     </ScreenWrapper>

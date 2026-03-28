@@ -14,10 +14,18 @@ export default StyleSheet.create({
     height: 250,
     overflow: 'hidden',
   },
+  imageFrame: {
+    flex: 1,
+  },
   image: {
     width: width + 80, // extra width for parallax
     height: '100%',
     marginLeft: -40,
+  },
+  remoteImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   dots: {
     flexDirection: 'row',

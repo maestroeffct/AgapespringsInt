@@ -4,6 +4,7 @@ import { AppText } from '../../AppText/AppText';
 import { useTheme } from '../../../theme/ThemeProvider';
 import styles from './styles';
 import { getRemoteImageUri } from '../../../helpers/imageSource';
+import { withOpacity } from '../../../theme/colors';
 
 type Props = {
   title: string;
@@ -11,6 +12,7 @@ type Props = {
   author?: string;
   date?: string;
   thumbnail?: string;
+  isToday?: boolean;
   onPress?: () => void;
 };
 
@@ -22,17 +24,56 @@ export function DevotionalCard({
   author,
   date,
   thumbnail,
+  isToday = false,
   onPress,
 }: Props) {
   const { theme, isDark } = useTheme();
   const remoteThumbnailUri = getRemoteImageUri(thumbnail);
+  const titleColor = isDark ? '#FFFFFF' : '#111111';
 
   return (
     <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
-      <View style={[styles.row, { borderBottomColor: theme.colors.border }]}>
+      <View
+        style={[
+          styles.row,
+          {
+            borderBottomColor: theme.colors.border,
+          },
+          isToday
+            ? {
+                backgroundColor: withOpacity(theme.colors.primary, isDark ? 0.12 : 0.05),
+                borderColor: withOpacity(theme.colors.primary, isDark ? 0.34 : 0.18),
+              }
+            : null,
+        ]}
+      >
         <View style={styles.left}>
+          {isToday ? (
+            <View
+              style={[
+                styles.todayPill,
+                {
+                  backgroundColor: withOpacity(
+                    theme.colors.primary,
+                    isDark ? 0.18 : 0.08,
+                  ),
+                  borderColor: withOpacity(
+                    theme.colors.primary,
+                    isDark ? 0.38 : 0.22,
+                  ),
+                },
+              ]}
+            >
+              <AppText
+                style={[styles.todayPillText, { color: theme.colors.primary }]}
+              >
+                Today
+              </AppText>
+            </View>
+          ) : null}
+
           <AppText
-            style={[styles.title, { color: isDark ? '#FFFFFF' : '#111111' }]}
+            style={[styles.title, { color: titleColor }]}
             numberOfLines={2}
           >
             {title}

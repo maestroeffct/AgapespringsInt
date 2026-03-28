@@ -71,6 +71,26 @@ export default StyleSheet.create({
     opacity: 0.8,
   },
 
+  metaRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'nowrap',
+  },
+
+  metaText: {
+    fontSize: 12,
+    opacity: 0.72,
+  },
+
+  downloadBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 18,
+    height: 18,
+  },
+
   date: {
     marginTop: 20,
     fontSize: 12,

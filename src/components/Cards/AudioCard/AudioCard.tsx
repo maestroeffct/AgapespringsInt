@@ -6,7 +6,9 @@ import {
   Animated,
   StyleProp,
   ViewStyle,
+  ActivityIndicator,
 } from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 
 import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
@@ -23,6 +25,9 @@ type AudioCardProps = {
   full?: boolean;
   author?: string;
   date?: string;
+  sizeLabel?: string;
+  onDownloadPress?: () => void;
+  downloadState?: 'idle' | 'downloading' | 'downloaded';
   layout?: 'vertical' | 'horizontal';
   imageHeight?: number;
   containerStyle?: StyleProp<ViewStyle>;
@@ -35,11 +40,14 @@ export function AudioCard({
   full = false,
   author,
   date,
+  sizeLabel,
+  onDownloadPress,
+  downloadState = 'idle',
   layout = 'vertical',
   imageHeight,
   containerStyle,
 }: AudioCardProps) {
-  const { isDark } = useTheme();
+  const { theme, isDark } = useTheme();
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
   const remoteThumbnailUri = getRemoteImageUri(thumbnail);
@@ -112,7 +120,70 @@ export function AudioCard({
             </AppText>
           ) : null}
 
-          {date ? (
+          {layout === 'horizontal' && (sizeLabel || date) ? (
+            <View style={styles.metaRow}>
+              {!!sizeLabel && (
+                <AppText
+                  variant="caption"
+                  numberOfLines={1}
+                  style={[
+                    styles.metaText,
+                    { color: theme.colors.textSecondary },
+                  ]}
+                >
+                  {sizeLabel}
+                </AppText>
+              )}
+
+              {onDownloadPress ? (
+                <TouchableOpacity
+                  onPress={onDownloadPress}
+                  hitSlop={8}
+                  style={styles.downloadBtn}
+                >
+                  {downloadState === 'downloading' ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.textSecondary}
+                    />
+                  ) : (
+                    <Ionicons
+                      name={
+                        downloadState === 'downloaded'
+                          ? 'checkmark-circle'
+                          : 'download-outline'
+                      }
+                      size={18}
+                      color={
+                        downloadState === 'downloaded'
+                          ? theme.colors.primary
+                          : theme.colors.textSecondary
+                      }
+                    />
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <Ionicons
+                  name="download-outline"
+                  size={18}
+                  color={theme.colors.textSecondary}
+                />
+              )}
+
+              {!!date && (
+                <AppText
+                  variant="caption"
+                  numberOfLines={1}
+                  style={[
+                    styles.metaText,
+                    { color: theme.colors.textSecondary },
+                  ]}
+                >
+                  {date}
+                </AppText>
+              )}
+            </View>
+          ) : date ? (
             <AppText variant="caption" style={styles.date}>
               {date}
             </AppText>

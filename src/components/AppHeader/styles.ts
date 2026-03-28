@@ -6,7 +6,7 @@ export default StyleSheet.create({
   },
 
   container: {
-    height: 56,
+    height: 60,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -17,26 +17,50 @@ export default StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 1,
   },
 
   right: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
+    minWidth: 40,
+    justifyContent: 'flex-end',
   },
 
   iconBtn: {
-    padding: 6,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  liveIconWrap: {
+    position: 'relative',
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  liveRipple: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
   },
 
   logoWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    justifyContent: 'center',
   },
 
   logo: {
     width: 128,
-    height: 128,
+    height: 38,
   },
 
   logoText: {

@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Image } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Image, Animated, Easing } from 'react-native';
 
 import { AppText } from '../../components/AppText/AppText';
 // import { ScreenWrapper } from '@/components/Screenwrapper/Screenwrapper';
@@ -17,6 +17,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
 export function SplashScreen({ navigation }: Props) {
   const { isDark } = useTheme();
+  const splashOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     let isMounted = true;
@@ -62,12 +63,23 @@ export function SplashScreen({ navigation }: Props) {
         return;
       }
 
-      if (updateParams) {
-        navigation.replace('UpdateRequired', updateParams);
-        return;
-      }
+      Animated.timing(splashOpacity, {
+        toValue: 0,
+        duration: 650,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (!finished || !isMounted) {
+          return;
+        }
 
-      navigation.replace(fallbackRoute);
+        if (updateParams) {
+          navigation.replace('UpdateRequired', updateParams);
+          return;
+        }
+
+        navigation.replace(fallbackRoute);
+      });
     };
 
     boot();
@@ -75,11 +87,11 @@ export function SplashScreen({ navigation }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [navigation]);
+  }, [navigation, splashOpacity]);
 
   return (
     <ScreenWrapper padded={false}>
-      <View style={styles.container}>
+      <Animated.View style={[styles.container, { opacity: splashOpacity }]}>
         <Image
           source={require('../../assets/images/logo.png')}
           style={styles.logo}
@@ -93,7 +105,7 @@ export function SplashScreen({ navigation }: Props) {
         >
           Grace | Mindset | Profit
         </AppText>
-      </View>
+      </Animated.View>
     </ScreenWrapper>
   );
 }

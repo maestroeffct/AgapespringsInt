@@ -33,7 +33,6 @@ export default function createStyles(colors: ThemeColors, isDark: boolean) {
     },
     headerTitle: {
       color: colors.textPrimary,
-      fontSize: 22,
       fontWeight: '700',
     },
     scheduleRow: {
@@ -51,22 +50,22 @@ export default function createStyles(colors: ThemeColors, isDark: boolean) {
     bullet: {
       color: colors.textSecondary,
       marginRight: 8,
-      fontSize: 16,
+      fontSize: 14,
       lineHeight: 18,
     },
     dayText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: 14,
     },
     timeText: {
       flex: 1,
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: 14,
       textAlign: 'center',
     },
     listenText: {
       color: colors.primary,
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: '600',
       textDecorationLine: 'underline',
     },

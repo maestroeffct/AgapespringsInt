@@ -145,7 +145,7 @@ export default function createStyles(colors: ThemeColors, isDark: boolean) {
     floatingFontControls: {
       position: 'absolute',
       right: 18,
-      bottom: 18,
+      bottom: 38,
       flexDirection: 'row',
       gap: 10,
       zIndex: 30,

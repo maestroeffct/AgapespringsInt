@@ -72,6 +72,7 @@ export function DevotionalLatestTab() {
 
         return {
           id: item.id,
+          devotionDate: item.devotion_date,
           title: item.title || `${item.day_name} Devotional`,
           excerpt: memoryVerseSource,
           author: 'Rev. Barnabas Alumogie',
@@ -148,6 +149,7 @@ export function DevotionalLatestTab() {
             author={item.author}
             date={item.date}
             thumbnail={item.thumbnail}
+            isToday={getComparableDate(item.devotionDate) === todayKey}
             onPress={() => {
               navigation.navigate('DevotionalDetails', {
                 item: {

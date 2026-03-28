@@ -1,17 +1,12 @@
 import React from 'react';
-import {
-  Alert,
-  Linking,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, Linking, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 import { AppText } from '../../components/AppText/AppText';
 import { useTheme } from '../../theme/ThemeProvider';
 import createStyles from './platformsRadioStyles';
 
-const RADIO_URL = 'https://www.agapespringsint.com/radio';
+const RADIO_URL = 'https://adaba889.fm/';
 
 const RADIO_SCHEDULE = [
   { day: 'Wednesday', time: '2:30 PM WAT' },
@@ -40,8 +35,14 @@ export function PlatformsRadioTab() {
     <View style={styles.screen}>
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <Ionicons name="radio-outline" size={22} color={theme.colors.primary} />
-          <AppText style={styles.headerTitle}>Agapesprings Radio</AppText>
+          <Ionicons
+            name="radio-outline"
+            size={22}
+            color={theme.colors.primary}
+          />
+          <AppText variant="h3" style={styles.headerTitle}>
+            Agapesprings Radio
+          </AppText>
         </View>
 
         {RADIO_SCHEDULE.map(item => (

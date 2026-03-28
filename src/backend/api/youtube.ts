@@ -58,6 +58,12 @@ export const youtubeApi = createApi({
       },
     }),
 
+    getActiveLiveStream: builder.query<any, void>({
+      query: () =>
+        `search?part=snippet&channelId=${YT.channelId}` +
+        `&eventType=live&type=video&maxResults=1&key=${API_KEY}`,
+    }),
+
     // Convenience wrappers (nice for home sections)
     getSermonVideos: builder.query<
       any,
@@ -92,6 +98,7 @@ export const youtubeApi = createApi({
 export const {
   useGetPlaylistFeedQuery,
   useGetVideoDetailsQuery,
+  useGetActiveLiveStreamQuery,
   useGetLatestFromChannelQuery,
   useGetSermonVideosQuery,
   useGetTestimonyVideosQuery,

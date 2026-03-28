@@ -34,6 +34,7 @@ export default function VideoPlayerScreen({ route, navigation }: Props) {
     | 'latest'
     | 'testimony'
     | 'broadcast'
+    | 'live'
     | undefined = route?.params?.source;
 
   const [playing, setPlaying] = useState(true);

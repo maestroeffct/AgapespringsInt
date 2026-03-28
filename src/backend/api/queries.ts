@@ -175,6 +175,8 @@ type AudioSermonApiItem = {
   audioUrl: string;
   thumbnailUrl: string;
   timePosted: string;
+  audioSizeBytes?: number;
+  audioSizeLabel?: string;
 };
 
 type AudioSermonApiResponse = {
@@ -189,6 +191,8 @@ export type AudioSermonItem = {
   audio_url: string;
   thumbnail_url: string;
   time_posted: string;
+  audio_size_bytes?: number;
+  audio_size_label?: string;
 };
 
 type AudioSermonSearchParams = {
@@ -207,6 +211,8 @@ const mapAudioSermonItem = (item: AudioSermonApiItem): AudioSermonItem => ({
   audio_url: item.audioUrl,
   thumbnail_url: item.thumbnailUrl,
   time_posted: item.timePosted,
+  audio_size_bytes: item.audioSizeBytes,
+  audio_size_label: item.audioSizeLabel,
 });
 
 const fetchAudioSermonPage = async (

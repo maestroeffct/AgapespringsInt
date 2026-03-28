@@ -30,16 +30,21 @@ import type { Track } from 'react-native-track-player';
 
 import Slider from '@react-native-community/slider';
 import LinearGradient from 'react-native-linear-gradient';
-import RNFS from 'react-native-fs';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import {
+  AttachStep,
+  SpotlightTourProvider,
+  TourBox,
+  TourStep,
+} from 'react-native-spotlight-tour';
 
 import { AppText } from '../../components/AppText/AppText';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { getItem, setItem, StorageKeys } from '../../helpers/storage';
 import {
   getDownloadedAudioMap,
-  upsertDownloadedAudio,
 } from '../../helpers/downloadedAudio';
+import { downloadAudioToAppStorage } from '../../helpers/audioDownload';
 import { ensureTrackPlayerSetup } from '../../player/ensureTrackPlayerSetup';
 import type { AudioQueueItem } from '../../navigation/types';
 
@@ -72,10 +77,6 @@ function formatTime(seconds: number) {
   const mm = String(m).padStart(1, '0');
   const rr = String(r).padStart(2, '0');
   return `${mm}:${rr}`;
-}
-
-function safeFilename(name: string) {
-  return name.replace(/[/?%*:|"<>\\]/g, '-').trim();
 }
 
 function queuesAreSame(existingQueue: Track[], incomingQueue: Track[]) {
@@ -460,53 +461,22 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
     try {
       setDownloading(true);
-
-      const fileName = safeFilename(`${activeTitle || 'audio'}.mp3`);
-      const dir = RNFS.DocumentDirectoryPath + '/downloads'; // app sandbox downloads
-      const path = `${dir}/${fileName}`;
-
-      const existsDir = await RNFS.exists(dir);
-      if (!existsDir) await RNFS.mkdir(dir);
-
-      const exists = await RNFS.exists(path);
-      if (exists) {
-        await upsertDownloadedAudio({
-          id: activeId,
-          title: activeTitle,
-          author: activeAuthor,
-          artwork: activeArtwork,
-          localPath: path,
-          source: activeSource,
-          downloadedAt: new Date().toISOString(),
-        });
-        setDownloadedPath(path);
-        Alert.alert('Downloaded', 'This audio is already downloaded.');
-        setDownloading(false);
-        return;
-      }
-
-      const task = RNFS.downloadFile({
-        fromUrl: activeAudioUrl,
-        toFile: path,
+      const result = await downloadAudioToAppStorage({
+        id: activeId,
+        title: activeTitle,
+        author: activeAuthor,
+        artwork: activeArtwork,
+        audioUrl: activeAudioUrl,
+        source: activeSource,
       });
 
-      const res = await task.promise;
-
-      if (res.statusCode === 200) {
-        await upsertDownloadedAudio({
-          id: activeId,
-          title: activeTitle,
-          author: activeAuthor,
-          artwork: activeArtwork,
-          localPath: path,
-          source: activeSource,
-          downloadedAt: new Date().toISOString(),
-        });
-        setDownloadedPath(path);
-        Alert.alert('Downloaded', 'Saved inside app storage (Documents).');
-      } else {
-        Alert.alert('Download failed', `Status: ${res.statusCode}`);
-      }
+      setDownloadedPath(result.path);
+      Alert.alert(
+        'Downloaded',
+        result.alreadyExisted
+          ? 'This audio is already downloaded.'
+          : 'Saved inside app storage (Documents).',
+      );
     } catch (e: any) {
       Alert.alert('Download failed', e?.message ?? 'Unknown error');
     } finally {
@@ -557,13 +527,74 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       ? 'Repeat One'
       : 'Repeat All';
 
+  const tourSteps = useMemo<TourStep[]>(
+    () => [
+      {
+        shape: { type: 'rectangle', padding: 10 },
+        render: props => (
+          <TourBox
+            title="Queue"
+            hideBack
+            nextText={canSwipeToLyrics ? 'Next' : 'Done'}
+            style={{ backgroundColor: '#111111' }}
+            titleStyle={{ color: '#FFFFFF' }}
+            {...props}
+          >
+            <AppText style={{ color: 'rgba(255,255,255,0.78)' }}>
+              Open the queue to jump between tracks.
+            </AppText>
+          </TourBox>
+        ),
+      },
+      {
+        shape: { type: 'rectangle', padding: 10 },
+        render: props => (
+          <TourBox
+            title="Swipe For Lyrics"
+            hideBack
+            nextText="Done"
+            style={{ backgroundColor: '#111111' }}
+            titleStyle={{ color: '#FFFFFF' }}
+            {...props}
+          >
+            <AppText style={{ color: 'rgba(255,255,255,0.78)' }}>
+              Swipe left on the artwork to reveal lyrics for OneSound tracks.
+            </AppText>
+          </TourBox>
+        ),
+      },
+    ],
+    [canSwipeToLyrics],
+  );
+
   return (
-    <ScreenWrapper
-      padded={false}
-      statusBarStyle="light-content"
-      statusBarBackground="transparent"
-      style={styles.screen}
+    <SpotlightTourProvider
+      steps={canSwipeToLyrics ? tourSteps : [tourSteps[0]]}
+      overlayColor="#000000"
+      overlayOpacity={0.72}
+      onBackdropPress="continue"
+      onStop={({ index, isLast }) => {
+        if (index === 0 || isLast) {
+          setItem(StorageKeys.AUDIO_PLAYER_TOUR_DONE, true).catch(() => {});
+        }
+        if (canSwipeToLyrics && isLast) {
+          setItem(StorageKeys.ONESOUND_LYRICS_TOUR_DONE, true).catch(() => {});
+        }
+      }}
     >
+      {({ start }) => (
+        <>
+          <AudioPlayerTourStarter
+            startTour={start}
+            activeId={activeId}
+            canSwipeToLyrics={canSwipeToLyrics}
+          />
+          <ScreenWrapper
+            padded={false}
+            statusBarStyle="light-content"
+            statusBarBackground="transparent"
+            style={styles.screen}
+          >
       <ImageBackground
         source={LOCAL_BACKGROUND}
         blurRadius={24}
@@ -585,9 +616,11 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.95} onPress={openQueueList}>
-            <Ionicons name="list-outline" size={22} color="#fff" />
-          </TouchableOpacity>
+          <AttachStep index={0}>
+            <TouchableOpacity activeOpacity={0.95} onPress={openQueueList}>
+              <Ionicons name="list-outline" size={22} color="#fff" />
+            </TouchableOpacity>
+          </AttachStep>
         </View>
 
         {/* Title */}
@@ -601,7 +634,8 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         </View>
 
         {/* Cover */}
-        <View style={styles.coverWrap}>
+        <AttachStep index={1}>
+          <View style={styles.coverWrap}>
           {canSwipeToLyrics ? (
             <>
               <ScrollView
@@ -702,7 +736,8 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
               ) : null}
             </>
           )}
-        </View>
+          </View>
+        </AttachStep>
 
         {/* Waveform + time */}
         <View style={styles.waveWrap}>
@@ -922,8 +957,53 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         </View>
       </Modal>
       </ImageBackground>
-    </ScreenWrapper>
+          </ScreenWrapper>
+        </>
+      )}
+    </SpotlightTourProvider>
   );
+}
+
+function AudioPlayerTourStarter({
+  startTour,
+  activeId,
+  canSwipeToLyrics,
+}: {
+  startTour: () => void;
+  activeId: string;
+  canSwipeToLyrics: boolean;
+}) {
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      const [queueDone, lyricsDone] = await Promise.all([
+        getItem<boolean>(StorageKeys.AUDIO_PLAYER_TOUR_DONE),
+        getItem<boolean>(StorageKeys.ONESOUND_LYRICS_TOUR_DONE),
+      ]);
+
+      if (!active) return;
+
+      if (!queueDone) {
+        setTimeout(() => {
+          if (active) startTour();
+        }, 500);
+        return;
+      }
+
+      if (canSwipeToLyrics && !lyricsDone) {
+        setTimeout(() => {
+          if (active) startTour();
+        }, 500);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [activeId, canSwipeToLyrics, startTour]);
+
+  return null;
 }
 
 const styles = StyleSheet.create({

@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Share, Image, Modal } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Share,
+  Image,
+  Modal,
+  Alert,
+} from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerContentComponentProps,
@@ -35,9 +42,12 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
   const readableMode =
     mode === 'system' ? 'System' : mode === 'light' ? 'Light' : 'Dark';
+  const handleComingSoon = (label: string) => {
+    Alert.alert(label, 'Coming soon.');
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
       <DrawerContentScrollView
         {...props}
         contentContainerStyle={styles.scrollContent}
@@ -105,6 +115,42 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         />
 
         <DrawerItem
+          icon="chatbubble-ellipses-outline"
+          label="App Feedback"
+          onPress={() => handleComingSoon('App Feedback')}
+          theme={theme}
+          isDark={isDark}
+          comingSoon
+        />
+
+        <DrawerItem
+          icon="bulb-outline"
+          label="Feature Request"
+          onPress={() => handleComingSoon('Feature Request')}
+          theme={theme}
+          isDark={isDark}
+          comingSoon
+        />
+
+        <DrawerItem
+          icon="help-buoy-outline"
+          label="Help & Support"
+          onPress={() => handleComingSoon('Help & Support')}
+          theme={theme}
+          isDark={isDark}
+          comingSoon
+        />
+
+        <DrawerItem
+          icon="star-outline"
+          label="Rate in App Store"
+          onPress={() => handleComingSoon('Rate in App Store')}
+          theme={theme}
+          isDark={isDark}
+          comingSoon
+        />
+
+        <DrawerItem
           icon="share-social-outline"
           label="Share App"
           onPress={shareApp}
@@ -113,13 +159,28 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
         />
 
         <View style={styles.divider} />
-
-        <AppText style={styles.version}>Version {appVersion}</AppText>
       </DrawerContentScrollView>
+
+      <View
+        style={[
+          styles.footer,
+          {
+            backgroundColor: theme.colors.background,
+            borderTopColor: theme.colors.border,
+          },
+        ]}
+      >
+        <Image source={logo} style={styles.footerLogo} resizeMode="contain" />
+        <AppText
+          style={[styles.version, { color: theme.colors.textSecondary }]}
+        >
+          Version {appVersion}
+        </AppText>
+      </View>
 
       <Modal
         transparent
-        animationType="fade"
+        animationType="slide"
         visible={themeSheetVisible}
         onRequestClose={() => setThemeSheetVisible(false)}
       >
@@ -133,45 +194,71 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           <View
             style={[
               styles.sheetCard,
+              isDark ? styles.sheetCardDark : styles.sheetCardLight,
               {
-                backgroundColor: theme.colors.surface,
                 borderColor: theme.colors.border,
               },
             ]}
           >
-            <AppText
-              style={[styles.sheetTitle, { color: theme.colors.textPrimary }]}
-            >
-              Select App Theme
-            </AppText>
+            <View style={styles.sheetHeaderRow}>
+              <AppText
+                style={[styles.sheetTitle, { color: theme.colors.textPrimary }]}
+              >
+                Appearance
+              </AppText>
 
-            <ThemeOption
-              label="System"
-              active={mode === 'system'}
-              onPress={() => {
-                setMode('system');
-                setThemeSheetVisible(false);
-              }}
-              theme={theme}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setThemeSheetVisible(false)}
+                style={styles.closeBtn}
+              >
+                <Ionicons
+                  name="close-outline"
+                  size={22}
+                  color={theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={[
+                styles.sheetDivider,
+                { backgroundColor: theme.colors.border },
+              ]}
             />
-            <ThemeOption
-              label="Light"
-              active={mode === 'light'}
-              onPress={() => {
-                setMode('light');
-                setThemeSheetVisible(false);
-              }}
-              theme={theme}
-            />
-            <ThemeOption
-              label="Dark"
-              active={mode === 'dark'}
-              onPress={() => {
-                setMode('dark');
-                setThemeSheetVisible(false);
-              }}
-              theme={theme}
-            />
+
+            <View style={styles.themeGrid}>
+              <ThemeOptionCard
+                label="System"
+                icon="phone-portrait-outline"
+                active={mode === 'system'}
+                onPress={() => {
+                  setMode('system');
+                  setThemeSheetVisible(false);
+                }}
+                theme={theme}
+              />
+              <ThemeOptionCard
+                label="Dark"
+                icon="moon-outline"
+                active={mode === 'dark'}
+                onPress={() => {
+                  setMode('dark');
+                  setThemeSheetVisible(false);
+                }}
+                theme={theme}
+              />
+              <ThemeOptionCard
+                label="Light"
+                icon="sunny-outline"
+                active={mode === 'light'}
+                onPress={() => {
+                  setMode('light');
+                  setThemeSheetVisible(false);
+                }}
+                theme={theme}
+              />
+            </View>
           </View>
         </View>
       </Modal>
@@ -179,7 +266,14 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   );
 }
 
-function DrawerItem({ icon, label, onPress, theme, isDark }: any) {
+function DrawerItem({
+  icon,
+  label,
+  onPress,
+  theme,
+  isDark,
+  comingSoon = false,
+}: any) {
   return (
     <TouchableOpacity style={styles.item} onPress={onPress} activeOpacity={0.8}>
       <Ionicons name={icon} size={22} color={theme.colors.primary} />
@@ -193,38 +287,48 @@ function DrawerItem({ icon, label, onPress, theme, isDark }: any) {
         {label}
       </AppText>
 
-      <Ionicons
-        name="chevron-forward"
-        size={18}
-        color={theme.colors.textSecondary}
-      />
+      {comingSoon ? (
+        <AppText
+          style={[styles.comingSoonText, { color: theme.colors.textSecondary }]}
+        >
+          Coming Soon
+        </AppText>
+      ) : (
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color={theme.colors.textSecondary}
+        />
+      )}
     </TouchableOpacity>
   );
 }
 
-function ThemeOption({ label, active, onPress, theme }: any) {
+function ThemeOptionCard({ label, icon, active, onPress, theme }: any) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
       style={[
-        styles.themeOption,
+        styles.themeOptionCard,
         {
           borderColor: active ? theme.colors.primary : theme.colors.border,
           backgroundColor: active
-            ? `${theme.colors.primary}20`
-            : theme.colors.background,
+            ? `${theme.colors.primary}18`
+            : theme.colors.surface,
         },
       ]}
       onPress={onPress}
     >
-      <AppText style={{ color: theme.colors.textPrimary }}>{label}</AppText>
-      {active ? (
-        <Ionicons
-          name="checkmark-circle"
-          size={18}
-          color={theme.colors.primary}
-        />
-      ) : null}
+      <Ionicons
+        name={icon}
+        size={30}
+        color={active ? theme.colors.primary : theme.colors.textPrimary}
+      />
+      <AppText
+        style={[styles.themeLabel, { color: theme.colors.textPrimary }]}
+      >
+        {label}
+      </AppText>
     </TouchableOpacity>
   );
 }

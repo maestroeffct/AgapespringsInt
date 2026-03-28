@@ -6,8 +6,78 @@ import { getRemoteImageUri } from '../../helpers/imageSource';
 
 const { width } = Dimensions.get('window');
 const AUTO_SCROLL_INTERVAL = 4000;
+const FALLBACK_IMAGE = require('../../assets/images/hero1.png');
 
 const FALLBACK_SLIDES = [{ id: 'fallback-1', file_path: undefined }];
+
+function HeroCarouselImage({
+  remoteUri,
+  translateX,
+  opacity,
+}: {
+  remoteUri?: string;
+  translateX: Animated.AnimatedInterpolation<string | number>;
+  opacity: Animated.AnimatedInterpolation<string | number>;
+}) {
+  const loadedOpacity = useRef(new Animated.Value(remoteUri ? 0 : 1)).current;
+
+  useEffect(() => {
+    loadedOpacity.setValue(remoteUri ? 0 : 1);
+  }, [loadedOpacity, remoteUri]);
+
+  const animatedFallbackStyle = {
+    opacity: remoteUri
+      ? Animated.multiply(opacity, Animated.subtract(1, loadedOpacity))
+      : opacity,
+  };
+
+  const animatedRemoteStyle = remoteUri
+    ? {
+        opacity: Animated.multiply(opacity, loadedOpacity),
+      }
+    : null;
+
+  return (
+    <View style={styles.imageFrame}>
+      <Animated.Image
+        source={FALLBACK_IMAGE}
+        style={[
+          styles.image,
+          {
+            transform: [{ translateX }],
+          },
+          animatedFallbackStyle,
+        ]}
+        resizeMode="cover"
+      />
+
+      {remoteUri ? (
+        <Animated.Image
+          source={{ uri: remoteUri }}
+          style={[
+            styles.image,
+            styles.remoteImage,
+            {
+              transform: [{ translateX }],
+            },
+            animatedRemoteStyle,
+          ]}
+          resizeMode="cover"
+          onLoad={() => {
+            Animated.timing(loadedOpacity, {
+              toValue: 1,
+              duration: 220,
+              useNativeDriver: true,
+            }).start();
+          }}
+          onError={() => {
+            loadedOpacity.setValue(0);
+          }}
+        />
+      ) : null}
+    </View>
+  );
+}
 
 export function HeroCarousel() {
   const { data } = useCarousel();
@@ -85,20 +155,10 @@ export function HeroCarousel() {
 
           return (
             <View style={styles.slide}>
-              <Animated.Image
-                source={
-                  remoteUri
-                    ? { uri: remoteUri }
-                    : require('../../assets/images/hero1.png')
-                }
-                style={[
-                  styles.image,
-                  {
-                    transform: [{ translateX }],
-                    opacity,
-                  },
-                ]}
-                resizeMode="cover"
+              <HeroCarouselImage
+                remoteUri={remoteUri}
+                translateX={translateX}
+                opacity={opacity}
               />
             </View>
           );

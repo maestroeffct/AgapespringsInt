@@ -9,22 +9,53 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { DevotionalCard } from '../../components/Cards/DevotionalCard/DevotionalCard';
 import { AppText } from '../../components/AppText/AppText';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
+import { FilterSheet } from '../../components/FilterSheet/FilterSheet';
 import { useTheme } from '../../theme/ThemeProvider';
 import { useMonthlyDevotionals } from '../../backend/api/hooks/useMonthlyDevotionals';
 import { createDevotionalLatestTabStyles } from './styles';
+
+const MONTH_NAMES = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+];
+
+function buildMonthOptions() {
+  const now = new Date();
+  const options = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${d.getMonth() + 1}`;
+    const label = i === 0
+      ? `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()} (This month)`
+      : `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+    options.push({ label, value });
+  }
+  return options;
+}
 
 export function DevotionalLatestTab() {
   const { theme } = useTheme();
   const styles = createDevotionalLatestTabStyles(theme.colors);
   const navigation = useNavigation<any>();
   const [search, setSearch] = useState('');
+  const [filterOpen, setFilterOpen] = useState(false);
   const [today, setToday] = useState(() => new Date());
   const initialDayKeyRef = useRef(getLocalDateKey(today));
   const todayKey = useMemo(() => getLocalDateKey(today), [today]);
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth() + 1;
+
+  const defaultMonthValue = `${today.getFullYear()}-${today.getMonth() + 1}`;
+  const [pendingFilters, setPendingFilters] = useState({ month: defaultMonthValue });
+  const [activeFilters, setActiveFilters] = useState({ month: defaultMonthValue });
+
+  const [filterYear, filterMonth] = activeFilters.month.split('-').map(Number);
+  const isFilterActive = activeFilters.month !== defaultMonthValue;
+
+  const filterSections = useMemo(() => [
+    { key: 'month', title: 'Browse Month', options: buildMonthOptions() },
+  ], []);
+
   const { data, isLoading, isRefetching, refetch, isError } =
-    useMonthlyDevotionals(currentYear, currentMonth);
+    useMonthlyDevotionals(filterYear, filterMonth);
 
   const syncToday = useCallback(() => {
     setToday(previous => {
@@ -61,8 +92,9 @@ export function DevotionalLatestTab() {
   const devotionalItems = useMemo(() => {
     if (!data) return [];
 
+    const cutoff = isFilterActive ? '9999-12-31' : todayKey;
     return [...data]
-      .filter(item => getComparableDate(item.devotion_date) <= todayKey)
+      .filter(item => getComparableDate(item.devotion_date) <= cutoff)
       .sort((a, b) => b.devotion_date.localeCompare(a.devotion_date))
       .map(item => {
         const memoryVerseSource =
@@ -77,7 +109,7 @@ export function DevotionalLatestTab() {
           excerpt: memoryVerseSource,
           author: 'Rev. Barnabas Alumogie',
           date: formatDevotionalDate(item.devotion_date, item.day_name),
-          thumbnail: '',
+          thumbnail: item.thumbnail || '',
           memoryVerse: item.memory_verse || '',
           bibleReading: item.bible_reading || '',
           body: item.body || item.sections?.message || '',
@@ -113,6 +145,8 @@ export function DevotionalLatestTab() {
           value={search}
           onChangeText={setSearch}
           placeholder="Search devotionals..."
+          onFilterPress={() => { setPendingFilters(activeFilters); setFilterOpen(true); }}
+          filterActive={isFilterActive}
         />
         <View style={styles.stateWrap}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -127,6 +161,11 @@ export function DevotionalLatestTab() {
         value={search}
         onChangeText={setSearch}
         placeholder="Search devotionals..."
+        onFilterPress={() => {
+          setPendingFilters(activeFilters);
+          setFilterOpen(true);
+        }}
+        filterActive={isFilterActive}
       />
 
       <FlatList
@@ -190,6 +229,18 @@ export function DevotionalLatestTab() {
             </View>
           </View>
         }
+      />
+
+      <FilterSheet
+        visible={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        sections={filterSections}
+        values={pendingFilters}
+        onChange={(key, value) =>
+          setPendingFilters(prev => ({ ...prev, [key]: value }))
+        }
+        onReset={() => setPendingFilters({ month: defaultMonthValue })}
+        onApply={() => setActiveFilters(pendingFilters)}
       />
     </View>
   );

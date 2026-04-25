@@ -50,16 +50,14 @@ export function NotificationCard({ item, onPress }: Props) {
         </AppText>
 
         <AppText
-          variant="caption"
-          style={{ color: theme.colors.textSecondary }}
-          numberOfLines={2}
+          style={{ color: theme.colors.textSecondary, fontSize: 13, lineHeight: 18 }}
+          numberOfLines={3}
         >
           {item.message}
         </AppText>
 
         <AppText
-          variant="caption"
-          style={[styles.time, { color: theme.colors.textSecondary }]}
+          style={[styles.time, { color: theme.colors.textSecondary, fontSize: 11 }]}
         >
           {item.createdAt}
         </AppText>

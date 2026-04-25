@@ -1,4 +1,4 @@
-package com.agapespringsint
+package com.maestro_effect.agapesprings
 
 import android.app.Application
 import com.facebook.react.PackageList

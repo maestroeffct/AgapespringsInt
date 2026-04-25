@@ -8,7 +8,7 @@ type AppInfoModule = {
 const nativeAppInfo = NativeModules.AppInfo as AppInfoModule | undefined;
 
 export async function getInstalledAppVersion() {
-  const fallbackVersion = Platform.OS === 'ios' ? '1.4' : '1.0';
+  const fallbackVersion = Platform.OS === 'ios' ? '1.7' : '1.0';
 
   try {
     const version = await nativeAppInfo?.getVersion?.();

@@ -35,6 +35,16 @@ export type RootStackParamList = {
   DevotionalDetails: {
     item: DevotionalDetailsItem;
   };
+  DevotionalByDate: {
+    date?: string;
+  };
+
+  NotificationDetail: {
+    title: string;
+    message: string;
+    imageUrl?: string;
+    createdAt?: string;
+  };
 
   VideoList: undefined;
   AudioList: undefined;

@@ -6,7 +6,9 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import messaging from '@react-native-firebase/messaging';
+import { navigateFromNotificationData } from '../notifications/listeners';
 import { RootStackParamList } from './types';
 import { SplashScreen } from '../screens/Splashscreen/Splashscreen';
 import { OnboardingScreen } from '../screens/Onboarding/OnboardingScreen';
@@ -23,8 +25,19 @@ import NotificationsScreen from '../screens/NotificationsScreen/NotificationScre
 import VideoPlayerScreen from '../screens/VideoPlayerScreen/VideoPlayerScreen';
 import UpdateRequiredScreen from '../screens/UpdateRequired/UpdateRequiredScreen';
 import DevotionalDetailsScreen from '../screens/DevotionalDetailsScreen/DevotionalDetailsScreen';
+import DevotionalByDateScreen from '../screens/DevotionalByDate/DevotionalByDateScreen';
+import NotificationDetailScreen from '../screens/NotificationDetail/NotificationDetailScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const linking = {
+  prefixes: ['agapesprings://'],
+  config: {
+    screens: {
+      DevotionalByDate: 'devotional',
+    },
+  },
+};
 type NavState = NavigationState | PartialState<NavigationState> | undefined;
 const MINI_PLAYER_VISIBLE_ROUTES = new Set([
   'Main',
@@ -58,6 +71,24 @@ export function RootNavigator() {
   const navRef = useRef<NavigationContainerRef<any>>(null);
   const [activeRouteName, setActiveRouteName] = useState<string | undefined>();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    // App opened from a notification tap (background state)
+    const unsubscribe = messaging().onNotificationOpenedApp(remoteMessage => {
+      if (navRef.current) {
+        navigateFromNotificationData(navRef.current, remoteMessage.data as Record<string, string> | undefined);
+      }
+    });
+
+    // App opened from a notification tap (quit state)
+    messaging().getInitialNotification().then(remoteMessage => {
+      if (remoteMessage && navRef.current) {
+        navigateFromNotificationData(navRef.current, remoteMessage.data as Record<string, string> | undefined);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   const syncNavigationMeta = useCallback(() => {
     const route = navRef.current?.getCurrentRoute();
@@ -118,6 +149,7 @@ export function RootNavigator() {
     <View style={{ flex: 1 }}>
       <NavigationContainer
         ref={navRef}
+        linking={linking}
         onReady={syncNavigationMeta}
         onStateChange={syncNavigationMeta}
       >
@@ -150,6 +182,15 @@ export function RootNavigator() {
             options={{
               animation: 'slide_from_right',
             }}
+          />
+          <Stack.Screen
+            name="DevotionalByDate"
+            component={DevotionalByDateScreen}
+          />
+          <Stack.Screen
+            name="NotificationDetail"
+            component={NotificationDetailScreen}
+            options={{ presentation: 'transparentModal', animation: 'none' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

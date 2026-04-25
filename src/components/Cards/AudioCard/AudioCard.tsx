@@ -22,6 +22,7 @@ type AudioCardProps = {
   thumbnail?: string;
   title?: string;
   onPress?: () => void;
+  onLongPress?: () => void;
   full?: boolean;
   author?: string;
   date?: string;
@@ -31,12 +32,37 @@ type AudioCardProps = {
   layout?: 'vertical' | 'horizontal';
   imageHeight?: number;
   containerStyle?: StyleProp<ViewStyle>;
+  isPlaying?: boolean;
 };
+
+// ── Wave bar (one bar of the now-playing animation) ──────────────
+function WaveBar({ index, color }: { index: number; color: string }) {
+  const h = useRef(new Animated.Value(3 + index * 3)).current;
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(h, { toValue: 14, duration: 380, useNativeDriver: false }),
+        Animated.timing(h, { toValue: 3, duration: 380, useNativeDriver: false }),
+      ]),
+    );
+    timer = setTimeout(() => anim.start(), index * 130);
+    return () => {
+      clearTimeout(timer);
+      anim.stop();
+    };
+  }, [h, index]);
+
+  // eslint-disable-next-line react-native/no-inline-styles
+  return <Animated.View style={{ width: 3, height: h, backgroundColor: color, borderRadius: 1.5, alignSelf: 'flex-end' }} />;
+}
 
 export function AudioCard({
   thumbnail,
   title = 'Faith, Money, Offerings & your Future...',
   onPress,
+  onLongPress,
   full = false,
   author,
   date,
@@ -46,6 +72,7 @@ export function AudioCard({
   layout = 'vertical',
   imageHeight,
   containerStyle,
+  isPlaying = false,
 }: AudioCardProps) {
   const { theme, isDark } = useTheme();
   const remoteOpacity = useRef(new Animated.Value(0)).current;
@@ -60,7 +87,12 @@ export function AudioCard({
   }, [remoteOpacity, remoteThumbnailUri]);
 
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={400}
+    >
       <View
         style={[
           full ? styles.fullCard : styles.card,
@@ -99,20 +131,33 @@ export function AudioCard({
               }}
             />
           ) : null}
+
+          {/* Now-playing overlay */}
+          {isPlaying && (
+            <View style={styles.nowPlayingOverlay}>
+              <View style={styles.waveRow}>
+                <WaveBar index={0} color="#fff" />
+                <WaveBar index={1} color="#fff" />
+                <WaveBar index={2} color="#fff" />
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Text Section */}
         <View style={isHorizontal && styles.horizontalTextWrap}>
-          <AppText
-            variant="body"
-            numberOfLines={2}
-            style={[
-              styles.title,
-              { color: isDark ? palette.white : palette.gray900 },
-            ]}
-          >
-            {title}
-          </AppText>
+          <View style={isPlaying ? styles.playingTitleRow : null}>
+            <AppText
+              variant="body"
+              numberOfLines={2}
+              style={[
+                styles.title,
+                { color: isPlaying ? theme.colors.primary : isDark ? palette.white : palette.gray900 },
+              ]}
+            >
+              {title}
+            </AppText>
+          </View>
 
           {author ? (
             <AppText variant="caption" style={styles.author}>

@@ -96,4 +96,23 @@ export default StyleSheet.create({
     fontSize: 12,
     opacity: 0.6,
   },
+
+  nowPlayingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  waveRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 3,
+    height: 18,
+  },
+
+  playingTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 });

@@ -2,6 +2,7 @@ import messaging, {
   FirebaseMessagingTypes,
 } from '@react-native-firebase/messaging';
 import { showSuccess } from '../helpers/toast';
+import { NavigationContainerRef } from '@react-navigation/native';
 
 import { store } from '../utils/store';
 import {
@@ -122,6 +123,32 @@ export async function markNotificationAsRead(id: string) {
   const next = await markStoredNotificationsRead([id]);
   store.dispatch(markNotificationRead(id));
   store.dispatch(hydrateNotifications(next));
+}
+
+export function navigateFromNotificationData(
+  nav: NavigationContainerRef<any>,
+  data?: Record<string, string>,
+  item?: { title?: string; message?: string; imageUrl?: string; createdAt?: string },
+) {
+  const type = data?.type;
+  const screen = data?.screen;
+
+  if (screen === 'DevotionalByDate' || type === 'devotional') {
+    nav.navigate('DevotionalByDate', { date: data?.date });
+    return;
+  }
+  if (type === 'live_stream') {
+    nav.navigate('Main');
+    return;
+  }
+
+  // No specific target — show notification detail bottom sheet
+  const title = item?.title ?? data?.title ?? 'Notification';
+  const message = item?.message ?? data?.body ?? data?.message ?? '';
+  const imageUrl = item?.imageUrl ?? data?.imageUrl;
+  const createdAt = item?.createdAt;
+
+  nav.navigate('NotificationDetail', { title, message, imageUrl, createdAt });
 }
 
 export async function setupNotificationListeners() {

@@ -53,6 +53,7 @@ type DevotionalApiItem = {
   prayer: string;
   sections?: Record<string, string>;
   rawText?: string;
+  coverImageUrl?: string | null;
 };
 
 type DevotionalTodayApiResponse = {
@@ -75,6 +76,7 @@ export type DevotionalTodayItem = {
   prayer: string;
   sections: Record<string, string>;
   raw_text: string;
+  thumbnail?: string;
 };
 
 type DevotionalMonthlyApiResponse = {
@@ -136,6 +138,7 @@ const mapDevotionalItem = (
   prayer: item.prayer ?? '',
   sections: item.sections ?? {},
   raw_text: item.rawText ?? '',
+  thumbnail: item.coverImageUrl ?? undefined,
 });
 
 export const devotionalTodayQueryOptions = () =>
@@ -146,8 +149,8 @@ export const devotionalTodayQueryOptions = () =>
 
       return mapDevotionalItem(res.data);
     },
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 60 * 6,      // 6 hours — fresh all day
+    gcTime: 1000 * 60 * 60 * 20,         // 20 hours — keeps presigned URLs alive
     refetchOnMount: false,
     refetchOnReconnect: true,
   });
@@ -162,8 +165,8 @@ export const devotionalMonthlyQueryOptions = (year: number, month: number) =>
 
       return (res.data ?? []).map(mapDevotionalItem);
     },
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 60 * 6,      // 6 hours
+    gcTime: 1000 * 60 * 60 * 20,         // 20 hours — same presigned URL reused all day
     refetchOnMount: false,
     refetchOnReconnect: true,
   });

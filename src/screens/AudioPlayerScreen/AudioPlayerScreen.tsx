@@ -11,7 +11,6 @@ import {
   ImageBackground,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Animated,
   Modal,
   ScrollView,
@@ -47,6 +46,7 @@ import {
 import { downloadAudioToAppStorage } from '../../helpers/audioDownload';
 import { ensureTrackPlayerSetup } from '../../player/ensureTrackPlayerSetup';
 import type { AudioQueueItem } from '../../navigation/types';
+import { AppAlert } from '../../components/AppAlert/AppAlert';
 
 type AudioPlayerParams = {
   audioUrl?: string;
@@ -65,7 +65,7 @@ const LOCAL_COVER_ARTWORK = require('../../assets/images/audio_cover.png');
 const MIN_PLAYBACK_RATE = 0.5;
 const MAX_PLAYBACK_RATE = 2;
 const PLAYBACK_RATE_STEP = 0.25;
-const COVER_SIZE = 290;
+const COVER_SIZE = 240;
 const QUEUE_ITEM_HEIGHT = 62;
 const QUEUE_ITEM_GAP = 10;
 const QUEUE_ITEM_SPAN = QUEUE_ITEM_HEIGHT + QUEUE_ITEM_GAP;
@@ -236,7 +236,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
 
     if (incomingQueue.length === 0) {
       setReady(false);
-      Alert.alert('Audio Player', 'No audio source was provided for playback.');
+      AppAlert.alert('Audio Player', 'No audio source was provided for playback.');
       return;
     }
 
@@ -296,7 +296,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
   useEffect(() => {
     setup().catch(error => {
       console.error('AudioPlayer setup failed:', error);
-      Alert.alert(
+      AppAlert.alert(
         'Audio Player Error',
         'Unable to initialize player. Please try again.',
       );
@@ -471,14 +471,14 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       });
 
       setDownloadedPath(result.path);
-      Alert.alert(
+      AppAlert.alert(
         'Downloaded',
         result.alreadyExisted
           ? 'This audio is already downloaded.'
           : 'Saved inside app storage (Documents).',
       );
     } catch (e: any) {
-      Alert.alert('Download failed', e?.message ?? 'Unknown error');
+      AppAlert.alert('Download failed', e?.message ?? 'Unknown error');
     } finally {
       setDownloading(false);
     }
@@ -496,7 +496,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       setActiveQueueIndex(typeof activeIndex === 'number' ? activeIndex : null);
       setQueueVisible(true);
     } catch (e: any) {
-      Alert.alert('Queue failed', e?.message ?? 'Unable to open queue.');
+      AppAlert.alert('Queue failed', e?.message ?? 'Unable to open queue.');
     } finally {
       setLoadingQueue(false);
     }
@@ -509,7 +509,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
       setActiveQueueIndex(index);
       setQueueVisible(false);
     } catch (e: any) {
-      Alert.alert('Play failed', e?.message ?? 'Unable to play this track.');
+      AppAlert.alert('Play failed', e?.message ?? 'Unable to play this track.');
     }
   };
 
@@ -634,7 +634,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         </View>
 
         {/* Cover */}
-        <AttachStep index={1}>
+        <AttachStep index={1} style={styles.coverAttach}>
           <View style={styles.coverWrap}>
           {canSwipeToLyrics ? (
             <>
@@ -679,6 +679,21 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
                         }}
                       />
                     ) : null}
+                    {lyricsPage === 0 ? (
+                      <Animated.View
+                        style={[
+                          styles.swipeHintWrap,
+                          {
+                            opacity: swipeHintOpacity,
+                            transform: [{ translateX: swipeHintX }],
+                          },
+                        ]}
+                      >
+                        <Text style={styles.swipeHintText}>
+                          Swipe {'>>>'} for Lyrics {'>>>'}
+                        </Text>
+                      </Animated.View>
+                    ) : null}
                   </View>
 
                   <View style={styles.lyricsPage}>
@@ -694,21 +709,6 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
                 </View>
               </ScrollView>
 
-              {lyricsPage === 0 ? (
-                <Animated.View
-                  style={[
-                    styles.swipeHintWrap,
-                    {
-                      opacity: swipeHintOpacity,
-                      transform: [{ translateX: swipeHintX }],
-                    },
-                  ]}
-                >
-                  <Text style={styles.swipeHintText}>
-                    Swipe {'>>>'} for Lyrics {'>>>'}
-                  </Text>
-                </Animated.View>
-              ) : null}
             </>
           ) : (
             <>
@@ -1010,7 +1010,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  bg: { flex: 1, paddingHorizontal: 18 },
+  bg: { flex: 1 },
   container: { flex: 1, paddingHorizontal: 18 },
 
   topRow: {
@@ -1036,6 +1036,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  coverAttach: {
+    alignSelf: 'stretch',
+  },
   coverWrap: {
     alignItems: 'center',
     marginTop: 22,
@@ -1095,11 +1098,17 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   swipeHintWrap: {
-    marginTop: 10,
+    position: 'absolute',
+    bottom: 10,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
   swipeHintText: {
-    color: 'rgba(255,255,255,0.78)',
-    fontSize: 12,
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.3,
   },

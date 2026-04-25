@@ -5,8 +5,35 @@ import {
   Share,
   Image,
   Modal,
-  Alert,
+  Linking,
+  Platform,
 } from 'react-native';
+import { AppAlert } from '../../components/AppAlert/AppAlert';
+import InAppReview from 'react-native-in-app-review';
+
+const STORE_URLS = {
+  android: 'market://details?id=com.maestro_effect.agapesprings',
+  androidFallback: 'https://play.google.com/store/apps/details?id=com.maestro_effect.agapesprings',
+  ios: 'itms-apps://itunes.apple.com/app/id6754452681?action=write-review',
+  iosFallback: 'https://apps.apple.com/app/id6754452681?action=write-review',
+};
+
+async function handleRateApp() {
+  const isAvailable = InAppReview.isAvailable();
+  if (isAvailable) {
+    try {
+      await InAppReview.RequestInAppReview();
+      return;
+    } catch {}
+  }
+  const primary = Platform.OS === 'ios' ? STORE_URLS.ios : STORE_URLS.android;
+  const fallback = Platform.OS === 'ios' ? STORE_URLS.iosFallback : STORE_URLS.androidFallback;
+  try {
+    await Linking.openURL(primary);
+  } catch {
+    await Linking.openURL(fallback);
+  }
+}
 import {
   DrawerContentScrollView,
   DrawerContentComponentProps,
@@ -34,17 +61,21 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   }, []);
 
   const shareApp = async () => {
+    const storeUrl =
+      Platform.OS === 'ios'
+        ? 'https://apps.apple.com/app/id6754452681'
+        : 'https://play.google.com/store/apps/details?id=com.maestro_effect.agapesprings';
+
     await Share.share({
-      message:
-        'Download AgapeSprings App and stay connected with sermons and devotionals.',
+      message: `Download the AgapeSprings Int. app and stay connected with sermons, devotionals and more.\n\n${storeUrl}`,
     });
   };
 
   const readableMode =
     mode === 'system' ? 'System' : mode === 'light' ? 'Light' : 'Dark';
-  const handleComingSoon = (label: string) => {
-    Alert.alert(label, 'Coming soon.');
-  };
+  // const handleComingSoon = (label: string) => {
+  //   AppAlert.alert(label, 'Coming soon.');
+  // };
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
@@ -114,40 +145,34 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           isDark={isDark}
         />
 
-        <DrawerItem
+        {/* <DrawerItem
           icon="chatbubble-ellipses-outline"
           label="App Feedback"
           onPress={() => handleComingSoon('App Feedback')}
           theme={theme}
           isDark={isDark}
           comingSoon
-        />
+        /> */}
 
-        <DrawerItem
+        {/* <DrawerItem
           icon="bulb-outline"
           label="Feature Request"
           onPress={() => handleComingSoon('Feature Request')}
           theme={theme}
           isDark={isDark}
           comingSoon
-        />
-
-        <DrawerItem
-          icon="help-buoy-outline"
-          label="Help & Support"
-          onPress={() => handleComingSoon('Help & Support')}
-          theme={theme}
-          isDark={isDark}
-          comingSoon
-        />
+        /> */}
 
         <DrawerItem
           icon="star-outline"
-          label="Rate in App Store"
-          onPress={() => handleComingSoon('Rate in App Store')}
+          label="Rate the App"
+          onPress={() =>
+            handleRateApp().catch(() =>
+              AppAlert.alert('Error', 'Could not open the store. Please try again.'),
+            )
+          }
           theme={theme}
           isDark={isDark}
-          comingSoon
         />
 
         <DrawerItem

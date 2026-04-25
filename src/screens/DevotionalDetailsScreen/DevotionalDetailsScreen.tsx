@@ -1,9 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  Alert,
+  ActivityIndicator,
   ImageBackground,
+  Platform,
   ScrollView,
   Share,
+  StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -20,6 +22,9 @@ import {
 import { getRemoteImageUri } from '../../helpers/imageSource';
 import type { DevotionalDetailsItem } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useBibleVerse } from '../../backend/api/hooks/useBibleVerse';
+import { isBareBibleReference } from '../../backend/api/bibleApi';
+import { AppAlert } from '../../components/AppAlert/AppAlert';
 import createStyles from './styles';
 
 type Props = {
@@ -53,11 +58,23 @@ export default function DevotionalDetailsScreen({ route, navigation }: Props) {
   const decreaseFont = () => setFontScale(prev => Math.max(prev - 0.1, 0.85));
 
   const handleShare = async () => {
+    const deepLink = item.date
+      ? `agapesprings://devotional?date=${item.date}`
+      : null;
+
+    const storeLink =
+      Platform.OS === 'ios'
+        ? 'https://apps.apple.com/us/app/agapesprings-online/id6754452681'
+        : 'https://play.google.com/store/apps/details?id=com.maestro_effect.agapesprings';
+
     const shareParts = [
       item.title,
       item.memoryVerse,
       item.body,
       item.prayer ? `Prayer: ${item.prayer}` : undefined,
+      deepLink
+        ? `📖 Read in AgapeSprings app:\n${deepLink}\n\nDon't have the app? Download it:\n${storeLink}`
+        : `📖 Download the AgapeSprings app:\n${storeLink}`,
     ].filter(Boolean);
 
     await Share.share({
@@ -66,7 +83,7 @@ export default function DevotionalDetailsScreen({ route, navigation }: Props) {
   };
 
   const handleReadAloud = () => {
-    Alert.alert('Coming Soon', 'Read-aloud is not available yet.');
+    AppAlert.alert('Coming Soon', 'Read-aloud is not available yet.');
   };
 
   const syncLikedState = useCallback(() => {
@@ -188,20 +205,34 @@ export default function DevotionalDetailsScreen({ route, navigation }: Props) {
                 </AppText>
               ) : null}
 
-              <AppText
-                selectable
-                selectionColor={theme.colors.primary}
-                style={[
-                  section.emphasis === 'verse'
-                    ? styles.memoryVerse
-                    : section.emphasis === 'inline'
-                    ? styles.inlineSectionBody
-                    : styles.sectionBody,
-                  { fontSize: getScaledFontSize(section.emphasis, fontScale) },
-                ]}
-              >
-                {section.value}
-              </AppText>
+              {section.key === 'memoryVerse' || section.key === 'furtherStudy' ? (
+                <BibleVerseBlock
+                  text={section.value}
+                  verseStyle={
+                    section.emphasis === 'verse'
+                      ? styles.memoryVerse
+                      : styles.inlineSectionBody
+                  }
+                  bodyStyle={styles.inlineSectionBody}
+                  primaryColor={theme.colors.primary}
+                  fontScale={fontScale}
+                />
+              ) : (
+                <AppText
+                  selectable
+                  selectionColor={theme.colors.primary}
+                  style={[
+                    section.emphasis === 'verse'
+                      ? styles.memoryVerse
+                      : section.emphasis === 'inline'
+                      ? styles.inlineSectionBody
+                      : styles.sectionBody,
+                    { fontSize: getScaledFontSize(section.emphasis, fontScale) },
+                  ]}
+                >
+                  {section.value}
+                </AppText>
+              )}
             </View>
           ))}
 
@@ -253,6 +284,51 @@ export default function DevotionalDetailsScreen({ route, navigation }: Props) {
         </View>
       </View>
     </ScreenWrapper>
+  );
+}
+
+type BibleVerseBlockProps = {
+  text: string;
+  verseStyle: object;
+  bodyStyle: object;
+  primaryColor: string;
+  fontScale: number;
+};
+
+function BibleVerseBlock({
+  text,
+  verseStyle,
+  bodyStyle,
+  primaryColor,
+  fontScale,
+}: BibleVerseBlockProps) {
+  const isBareRef = isBareBibleReference(text);
+  const { verseText, actualTranslation, isLoading } = useBibleVerse(isBareRef ? text : undefined);
+
+  return (
+    <View>
+      <AppText selectable style={[verseStyle, { fontSize: 15 * fontScale }]}>
+        {text}
+      </AppText>
+
+      {isBareRef && isLoading && (
+        <ActivityIndicator
+          size="small"
+          color={primaryColor}
+          style={verseBlockStyles.loader}
+        />
+      )}
+
+      {isBareRef && !isLoading && !!verseText && (
+        <AppText
+          selectable
+          style={[verseBlockStyles.fetchedVerse, bodyStyle, { fontSize: 14 * fontScale }]}
+        >
+          {verseText}
+          {actualTranslation ? `  — ${actualTranslation}` : ''}
+        </AppText>
+      )}
+    </View>
   );
 }
 
@@ -332,3 +408,13 @@ function getScaledFontSize(
   if (emphasis === 'inline') return 13 * fontScale;
   return 14 * fontScale;
 }
+
+const verseBlockStyles = StyleSheet.create({
+  loader: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  fetchedVerse: {
+    marginTop: 8,
+  },
+});

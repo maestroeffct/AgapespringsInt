@@ -45,10 +45,27 @@ export default StyleSheet.create({
 
   liveRipple: {
     position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 2,
+  },
+
+  liveBadge: {
+    position: 'absolute',
+    bottom: 4,
+    right: 2,
+    backgroundColor: '#D21F3C',
+    borderRadius: 3,
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+  },
+
+  liveBadgeText: {
+    fontSize: 7,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 
   logoWrap: {

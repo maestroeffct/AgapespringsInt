@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Image, TouchableOpacity, Animated } from 'react-native';
+import { useTheme } from '../../../theme/ThemeProvider';
+import { palette } from '../../../theme/colors';
 
 import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
@@ -20,6 +22,7 @@ export function TestimonyCard({
   onPress,
   full = false,
 }: TestimonyCardProps) {
+  const { isDark } = useTheme();
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
   const remoteThumbnailUri = getRemoteImageUri(thumbnail);
@@ -67,7 +70,11 @@ export function TestimonyCard({
             />
           )}
         </View>
-        <AppText variant="body" numberOfLines={1}>
+        <AppText
+          variant="body"
+          numberOfLines={1}
+          style={{ color: isDark ? palette.white : palette.gray900 }}
+        >
           {title}
         </AppText>
       </View>

@@ -1,4 +1,4 @@
-package com.agapespringsint
+package com.maestro_effect.agapesprings
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

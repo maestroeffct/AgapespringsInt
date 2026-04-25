@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, TouchableOpacity, Linking } from 'react-native';
+import { AppAlert } from '../AppAlert/AppAlert';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import Clipboard from '@react-native-clipboard/clipboard';
 
@@ -25,19 +26,19 @@ export function PlatformRow({ title, url, leftIcon }: Props) {
 
       const can = await Linking.canOpenURL(url);
       if (!can) {
-        Alert.alert('Invalid link', url);
+        AppAlert.alert('Invalid link', url);
         return;
       }
 
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Invalid link', url);
+      AppAlert.alert('Invalid link', url);
     }
   };
 
   const copy = () => {
     Clipboard.setString(url);
-    Alert.alert('Copied', 'Link copied to clipboard');
+    AppAlert.alert('Copied', 'Link copied to clipboard');
   };
 
   return (

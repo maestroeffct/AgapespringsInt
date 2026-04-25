@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
@@ -16,9 +16,10 @@ export function LivingWatersBroadcastTab() {
     item?.id?.videoId;
 
   const [q, setQ] = useState('');
-  const { data, isLoading } = useGetSermonVideosQuery({
-    maxResults: 150,
+  const { data, isLoading, isFetching, refetch } = useGetSermonVideosQuery({
+    maxResults: 50,
   });
+  const refetching = isFetching && !isLoading;
 
   const items = useMemo(() => data?.items ?? [], [data]);
 
@@ -66,13 +67,17 @@ export function LivingWatersBroadcastTab() {
           renderItem={({ item }) => {
             const videoId = getVideoId(item);
             const thumbnail =
+              item?.snippet?.thumbnails?.maxres?.url ??
               item?.snippet?.thumbnails?.high?.url ??
-              item?.snippet?.thumbnails?.medium?.url;
+              item?.snippet?.thumbnails?.standard?.url ??
+              item?.snippet?.thumbnails?.medium?.url ??
+              item?.snippet?.thumbnails?.default?.url;
 
             return (
               <VideoCard
                 full
                 layout="horizontal"
+                imageHeight={130}
                 title={item?.snippet?.title}
                 thumbnail={thumbnail}
                 onPress={() =>
@@ -90,6 +95,14 @@ export function LivingWatersBroadcastTab() {
               />
             );
           }}
+          refreshControl={
+            <RefreshControl
+              refreshing={!isLoading && refetching}
+              onRefresh={refetch}
+              tintColor={theme.colors.primary}
+              colors={[theme.colors.primary]}
+            />
+          }
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
         />

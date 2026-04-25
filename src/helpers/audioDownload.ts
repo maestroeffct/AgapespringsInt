@@ -7,6 +7,7 @@ type DownloadAudioParams = {
   title: string;
   author: string;
   artwork?: string;
+  lyrics?: string;
   audioUrl: string;
   source: 'onesound' | 'livingwaters';
 };
@@ -20,6 +21,7 @@ export async function downloadAudioToAppStorage({
   title,
   author,
   artwork,
+  lyrics,
   audioUrl,
   source,
 }: DownloadAudioParams) {
@@ -39,6 +41,7 @@ export async function downloadAudioToAppStorage({
       title,
       author,
       artwork,
+      lyrics,
       localPath: path,
       source,
       downloadedAt: new Date().toISOString(),
@@ -66,6 +69,7 @@ export async function downloadAudioToAppStorage({
     title,
     author,
     artwork,
+    lyrics,
     localPath: path,
     source,
     downloadedAt: new Date().toISOString(),

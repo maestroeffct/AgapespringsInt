@@ -1,5 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  View,
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { AudioCard } from '../../components/Cards/AudioCard/AudioCard';
@@ -8,20 +13,40 @@ import {
   useInfiniteAudioSermonSearch,
 } from '../../backend/api/hooks/useAudioSermon';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
+import { FilterSheet } from '../../components/FilterSheet/FilterSheet';
 import { useTheme } from '../../theme/ThemeProvider';
 import { useNavigation } from '@react-navigation/native';
 import type { AudioQueueItem } from '../../navigation/types';
 import { getDownloadedAudioItems } from '../../helpers/downloadedAudio';
 import { downloadAudioToAppStorage } from '../../helpers/audioDownload';
+import { AppAlert } from '../AppAlert/AppAlert';
 
 const PLACEHOLDER_COUNT = 10;
 const PAGE_SIZE = 20;
 
+const FILTER_SECTIONS = [
+  {
+    key: 'sort',
+    title: 'Sort by',
+    options: [
+      { label: 'Newest First', value: 'newest' },
+      { label: 'Oldest First', value: 'oldest' },
+    ],
+  },
+];
+
+const DEFAULT_FILTERS = { sort: 'newest' };
+
 export function LivingWatersAudioTab() {
   const { theme } = useTheme();
   const [q, setQ] = useState('');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [pendingFilters, setPendingFilters] = useState(DEFAULT_FILTERS);
+  const [activeFilters, setActiveFilters] = useState(DEFAULT_FILTERS);
   const [downloadedIds, setDownloadedIds] = useState<Record<string, true>>({});
-  const [downloadingIds, setDownloadingIds] = useState<Record<string, true>>({});
+  const [downloadingIds, setDownloadingIds] = useState<Record<string, true>>(
+    {},
+  );
   const trimmedQuery = q.trim();
   const isSearching = trimmedQuery.length > 0;
   const navigation = useNavigation<any>();
@@ -50,10 +75,13 @@ export function LivingWatersAudioTab() {
 
   const loadDownloaded = useCallback(async () => {
     const downloadedItems = await getDownloadedAudioItems('livingwaters');
-    const nextMap = downloadedItems.reduce<Record<string, true>>((acc, item) => {
-      acc[item.id] = true;
-      return acc;
-    }, {});
+    const nextMap = downloadedItems.reduce<Record<string, true>>(
+      (acc, item) => {
+        acc[item.id] = true;
+        return acc;
+      },
+      {},
+    );
     setDownloadedIds(nextMap);
   }, []);
 
@@ -74,7 +102,13 @@ export function LivingWatersAudioTab() {
     });
   }
 
+  const displayItems = useMemo(() => {
+    if (activeFilters.sort === 'oldest') return [...items].reverse();
+    return items;
+  }, [items, activeFilters.sort]);
+
   const showPlaceholders = activeQuery.isLoading && items.length === 0;
+  const isFilterActive = activeFilters.sort !== DEFAULT_FILTERS.sort;
 
   const handleDownloadPress = async (item: (typeof items)[number]) => {
     if (downloadingIds[item.id]) return;
@@ -92,14 +126,14 @@ export function LivingWatersAudioTab() {
       });
 
       setDownloadedIds(prev => ({ ...prev, [item.id]: true }));
-      Alert.alert(
+      AppAlert.alert(
         'Downloaded',
         result.alreadyExisted
           ? 'This audio is already downloaded.'
           : 'Saved inside app storage (Documents).',
       );
     } catch (error: any) {
-      Alert.alert('Download failed', error?.message ?? 'Unknown error');
+      AppAlert.alert('Download failed', error?.message ?? 'Unknown error');
     } finally {
       setDownloadingIds(prev => {
         const next = { ...prev };
@@ -115,11 +149,16 @@ export function LivingWatersAudioTab() {
         value={q}
         onChangeText={setQ}
         placeholder="Search audio messages..."
+        onFilterPress={() => {
+          setPendingFilters(activeFilters);
+          setFilterOpen(true);
+        }}
+        filterActive={isFilterActive}
       />
 
       <FlatList
         data={
-          showPlaceholders ? Array.from({ length: PLACEHOLDER_COUNT }) : items
+          showPlaceholders ? Array.from({ length: PLACEHOLDER_COUNT }) : displayItems
         }
         keyExtractor={(item: any, index) => item?.id ?? `placeholder-${index}`}
         renderItem={({ item, index }) => {
@@ -157,6 +196,14 @@ export function LivingWatersAudioTab() {
             />
           );
         }}
+        refreshControl={
+          <RefreshControl
+            refreshing={!activeQuery.isLoading && activeQuery.isRefetching}
+            onRefresh={() => activeQuery.refetch()}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+          />
+        }
         onEndReachedThreshold={0.4}
         onEndReached={() => {
           if (
@@ -176,6 +223,18 @@ export function LivingWatersAudioTab() {
         }
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
         showsVerticalScrollIndicator={false}
+      />
+
+      <FilterSheet
+        visible={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        sections={FILTER_SECTIONS}
+        values={pendingFilters}
+        onChange={(key, value) =>
+          setPendingFilters(prev => ({ ...prev, [key]: value }))
+        }
+        onReset={() => setPendingFilters(DEFAULT_FILTERS)}
+        onApply={() => setActiveFilters(pendingFilters)}
       />
     </View>
   );

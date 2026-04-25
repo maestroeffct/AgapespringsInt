@@ -5,6 +5,7 @@ export type DownloadedAudioItem = {
   title: string;
   author: string;
   artwork?: string;
+  lyrics?: string;
   localPath: string;
   source: 'onesound' | 'livingwaters';
   downloadedAt: string;

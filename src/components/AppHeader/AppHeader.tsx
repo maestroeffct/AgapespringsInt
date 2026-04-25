@@ -36,6 +36,8 @@ export function AppHeader({
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rippleScale = useRef(new Animated.Value(1)).current;
   const rippleOpacity = useRef(new Animated.Value(0)).current;
+  const ripple2Scale = useRef(new Animated.Value(1)).current;
+  const ripple2Opacity = useRef(new Animated.Value(0)).current;
   const headerIconColor = isDark ? theme.colors.textPrimary : '#000000';
 
   // 🔔 Animate badge when count changes
@@ -60,43 +62,49 @@ export function AppHeader({
     if (!infoIsActive) {
       rippleScale.stopAnimation();
       rippleOpacity.stopAnimation();
+      ripple2Scale.stopAnimation();
+      ripple2Opacity.stopAnimation();
       rippleScale.setValue(1);
       rippleOpacity.setValue(0);
+      ripple2Scale.setValue(1);
+      ripple2Opacity.setValue(0);
       return;
     }
 
-    const loop = Animated.loop(
+    const DURATION = 1600;
+
+    const ring1 = Animated.loop(
       Animated.parallel([
         Animated.sequence([
-          Animated.timing(rippleOpacity, {
-            toValue: 0.34,
-            duration: 180,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rippleOpacity, {
-            toValue: 0,
-            duration: 1100,
-            useNativeDriver: true,
-          }),
+          Animated.timing(rippleOpacity, { toValue: 0.7, duration: 200, useNativeDriver: true }),
+          Animated.timing(rippleOpacity, { toValue: 0, duration: DURATION - 200, useNativeDriver: true }),
         ]),
         Animated.sequence([
-          Animated.timing(rippleScale, {
-            toValue: 1.45,
-            duration: 1280,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rippleScale, {
-            toValue: 1,
-            duration: 0,
-            useNativeDriver: true,
-          }),
+          Animated.timing(rippleScale, { toValue: 2.0, duration: DURATION, useNativeDriver: true }),
+          Animated.timing(rippleScale, { toValue: 1, duration: 0, useNativeDriver: true }),
         ]),
       ]),
     );
 
-    loop.start();
-    return () => loop.stop();
-  }, [infoIsActive, rippleOpacity, rippleScale]);
+    const ring2 = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.delay(DURATION / 2),
+          Animated.timing(ripple2Opacity, { toValue: 0.7, duration: 200, useNativeDriver: true }),
+          Animated.timing(ripple2Opacity, { toValue: 0, duration: DURATION - 200, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.delay(DURATION / 2),
+          Animated.timing(ripple2Scale, { toValue: 2.0, duration: DURATION, useNativeDriver: true }),
+          Animated.timing(ripple2Scale, { toValue: 1, duration: 0, useNativeDriver: true }),
+        ]),
+      ]),
+    );
+
+    ring1.start();
+    ring2.start();
+    return () => { ring1.stop(); ring2.stop(); };
+  }, [infoIsActive, rippleOpacity, rippleScale, ripple2Opacity, ripple2Scale]);
 
   // 🔁 Theme-aware logo
   const logo = isDark
@@ -121,17 +129,30 @@ export function AppHeader({
     <TouchableOpacity onPress={onInfoPress} style={styles.iconBtn}>
       <View style={styles.liveIconWrap}>
         {infoIsActive ? (
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.liveRipple,
-              {
-                borderColor: theme.colors.primary,
-                opacity: rippleOpacity,
-                transform: [{ scale: rippleScale }],
-              },
-            ]}
-          />
+          <>
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.liveRipple,
+                {
+                  borderColor: theme.colors.primary,
+                  opacity: rippleOpacity,
+                  transform: [{ scale: rippleScale }],
+                },
+              ]}
+            />
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.liveRipple,
+                {
+                  borderColor: theme.colors.primary,
+                  opacity: ripple2Opacity,
+                  transform: [{ scale: ripple2Scale }],
+                },
+              ]}
+            />
+          </>
         ) : null}
 
         <Ionicons
@@ -139,6 +160,12 @@ export function AppHeader({
           size={24}
           color={infoIsActive ? theme.colors.primary : headerIconColor}
         />
+
+        {infoIsActive ? (
+          <View style={styles.liveBadge}>
+            <AppText style={styles.liveBadgeText}>LIVE</AppText>
+          </View>
+        ) : null}
       </View>
     </TouchableOpacity>
   );
@@ -212,7 +239,7 @@ export function AppHeader({
             </View>
           ) : (
             title && (
-              <AppText variant="h3" style={{ color: theme.colors.textPrimary }}>
+              <AppText variant="h3" style={{ color: headerIconColor }}>
                 {title}
               </AppText>
             )

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, Animated, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, Image } from 'react-native';
 
 import styles from './styles';
 import { AppText } from '../../../components/AppText/AppText';
@@ -14,6 +14,7 @@ type VideoCardProps = {
   onPress?: () => void;
   full?: boolean;
   layout?: 'vertical' | 'horizontal';
+  imageHeight?: number;
 };
 
 const FALLBACK = require('../../../assets/images/video_cover.png');
@@ -25,26 +26,16 @@ export function VideoCard({
   full = false,
   layout = 'vertical',
   date,
+  imageHeight,
 }: VideoCardProps) {
   const { isDark } = useTheme();
-  const remoteOpacity = useRef(new Animated.Value(0)).current;
-  const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [imgReady, setImgReady] = useState(false);
   const remoteThumbnailUri = getRemoteImageUri(thumbnail);
 
-  useEffect(() => {
-    remoteOpacity.setValue(0);
-    setShouldRenderRemote(false);
-
-    if (!remoteThumbnailUri) return;
-
-    const timer = setTimeout(() => {
-      setShouldRenderRemote(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [remoteOpacity, remoteThumbnailUri]);
-
   const isHorizontal = layout === 'horizontal';
+  const wrapHeight = imageHeight ?? (isHorizontal ? 100 : 160);
+  const showRemote = !!remoteThumbnailUri && !imgError;
 
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
@@ -55,26 +46,23 @@ export function VideoCard({
         ]}
       >
         <View
-          style={[styles.imageWrap, isHorizontal && styles.horizontalImageWrap]}
+          style={[
+            styles.imageWrap,
+            isHorizontal && styles.horizontalImageWrap,
+            { height: wrapHeight },
+          ]}
         >
-          <Image
-            source={FALLBACK}
-            style={styles.imageFill}
-            resizeMode="cover"
-          />
-
-          {shouldRenderRemote && !!remoteThumbnailUri && (
-            <Animated.Image
+          {/* Fallback visible until remote is ready */}
+          {!imgReady && (
+            <Image source={FALLBACK} style={styles.imageMain} resizeMode="cover" />
+          )}
+          {showRemote && (
+            <Image
               source={{ uri: remoteThumbnailUri }}
-              style={[styles.imageFill, { opacity: remoteOpacity }]}
+              style={[styles.imageMain, !imgReady && { position: 'absolute', opacity: 0 }]}
               resizeMode="cover"
-              onLoad={() => {
-                Animated.timing(remoteOpacity, {
-                  toValue: 1,
-                  duration: 350,
-                  useNativeDriver: true,
-                }).start();
-              }}
+              onLoad={() => setImgReady(true)}
+              onError={() => setImgError(true)}
             />
           )}
         </View>
@@ -86,7 +74,7 @@ export function VideoCard({
               styles.text,
               { color: isDark ? palette.white : palette.gray900 },
             ]}
-            numberOfLines={2}
+            numberOfLines={3}
           >
             {title}
           </AppText>

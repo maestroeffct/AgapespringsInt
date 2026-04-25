@@ -44,24 +44,47 @@ export const youtubeApi = createApi({
       },
     }),
 
-    // 3) Latest videos from channel (optional)
+    // 3) Latest videos from channel — uses uploads playlist (1 quota unit vs 100 for search)
     getLatestFromChannel: builder.query<
       any,
       { maxResults?: number; pageToken?: string }
     >({
       query: ({ maxResults = 10, pageToken }) => {
+        // Uploads playlist ID = channel ID with UC→UU prefix swap
+        const uploadsPlaylistId = 'UU' + YT.channelId.slice(2);
         let url =
-          `search?part=snippet&channelId=${YT.channelId}` +
-          `&order=date&type=video&maxResults=${maxResults}&key=${API_KEY}`;
+          `playlistItems?part=snippet&maxResults=${maxResults}` +
+          `&playlistId=${uploadsPlaylistId}&key=${API_KEY}`;
         if (pageToken) url += `&pageToken=${pageToken}`;
         return url;
       },
     }),
 
+    // Live stream status is served from our backend cache (free — no quota cost)
+    // The backend scheduler checks YouTube every 15 min and caches the result
     getActiveLiveStream: builder.query<any, void>({
-      query: () =>
-        `search?part=snippet&channelId=${YT.channelId}` +
-        `&eventType=live&type=video&maxResults=1&key=${API_KEY}`,
+      queryFn: async () => {
+        try {
+          const res = await fetch(
+            'https://api.agapespringsint.com/live-stream/status',
+          );
+          const json = await res.json();
+          const d = json?.data;
+          if (!d?.isLive) return { data: { items: [] } };
+          return {
+            data: {
+              items: [
+                {
+                  id: { videoId: d.videoId },
+                  snippet: { title: d.title },
+                },
+              ],
+            },
+          };
+        } catch {
+          return { data: { items: [] } };
+        }
+      },
     }),
 
     // Convenience wrappers (nice for home sections)
@@ -92,6 +115,19 @@ export const youtubeApi = createApi({
         return res as any;
       },
     }),
+
+    getVideoComments: builder.query<
+      any,
+      { videoId: string; maxResults?: number; pageToken?: string }
+    >({
+      query: ({ videoId, maxResults = 30, pageToken }) => {
+        let url =
+          `commentThreads?part=snippet&videoId=${videoId}` +
+          `&maxResults=${maxResults}&order=relevance&key=${API_KEY}`;
+        if (pageToken) url += `&pageToken=${pageToken}`;
+        return url;
+      },
+    }),
   }),
 });
 
@@ -102,4 +138,5 @@ export const {
   useGetLatestFromChannelQuery,
   useGetSermonVideosQuery,
   useGetTestimonyVideosQuery,
+  useGetVideoCommentsQuery,
 } = youtubeApi;

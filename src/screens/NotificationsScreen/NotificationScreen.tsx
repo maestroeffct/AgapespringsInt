@@ -12,6 +12,7 @@ import { RootState } from '../../utils/store';
 import {
   markAllNotificationsAsRead,
   markNotificationAsRead,
+  navigateFromNotificationData,
   triggerTestNotification,
 } from '../../notifications/listeners';
 
@@ -69,6 +70,12 @@ export default function NotificationsScreen({ navigation }: any) {
               item={item}
               onPress={() => {
                 markNotificationAsRead(item.id).catch(() => {});
+                navigateFromNotificationData(navigation, item.data, {
+                  title: item.title,
+                  message: item.message,
+                  imageUrl: item.data?.imageUrl,
+                  createdAt: item.createdAt,
+                });
               }}
             />
           )}

@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
   card: {
-    width: 250,
+    width: 300,
     marginLeft: 16,
   },
 
@@ -41,6 +41,11 @@ export default StyleSheet.create({
     height: '100%',
   },
 
+  imageMain: {
+    width: '100%',
+    height: '100%',
+  },
+
   horizontalCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -50,6 +55,7 @@ export default StyleSheet.create({
     width: 200,
     height: 100,
     marginRight: 12,
+    flexShrink: 0,
   },
 
   horizontalTextWrap: {

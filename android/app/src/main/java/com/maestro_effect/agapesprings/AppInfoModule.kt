@@ -1,4 +1,4 @@
-package com.agapespringsint
+package com.maestro_effect.agapesprings
 
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext

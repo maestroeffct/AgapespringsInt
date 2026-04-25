@@ -54,6 +54,7 @@ export default function DownloadedAudioListScreen({ navigation, route }: any) {
         title: item.title,
         author: item.author,
         artwork: item.artwork,
+        lyrics: item.lyrics,
       })),
     [filteredItems],
   );
@@ -104,6 +105,7 @@ export default function DownloadedAudioListScreen({ navigation, route }: any) {
                 title: item.title,
                 author: item.author,
                 artwork: item.artwork,
+                lyrics: item.lyrics,
                 source: item.source,
                 queue,
                 startIndex: index,

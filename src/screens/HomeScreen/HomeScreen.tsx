@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { AppAlert } from '../../components/AppAlert/AppAlert';
 
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
@@ -21,6 +22,7 @@ import { getItem, setItem, StorageKeys } from '../../helpers/storage';
 import { useTheme } from '../../theme/ThemeProvider';
 import { AppText } from '../../components/AppText/AppText';
 import { useGetActiveLiveStreamQuery } from '../../backend/api/youtube';
+import { displayLiveStreamNotification } from '../../notifications/notifee';
 
 export default function HomeScreen() {
   const { theme } = useTheme();
@@ -90,7 +92,6 @@ function HomeScreenContent({ startTour }: { startTour: () => void }) {
     state.notifications.items.filter(item => !item.read).length,
   );
   const { data: liveData } = useGetActiveLiveStreamQuery(undefined, {
-    pollingInterval: 60000,
     refetchOnFocus: true,
     refetchOnReconnect: true,
   });
@@ -100,6 +101,14 @@ function HomeScreenContent({ startTour }: { startTour: () => void }) {
     liveItem?.snippet?.resourceId?.videoId ??
     liveItem?.contentDetails?.videoId;
   const hasLiveStream = Boolean(liveVideoId);
+  const prevHasLiveStream = useRef(false);
+
+  useEffect(() => {
+    if (hasLiveStream && !prevHasLiveStream.current) {
+      displayLiveStreamNotification(liveItem?.snippet?.title).catch(() => {});
+    }
+    prevHasLiveStream.current = hasLiveStream;
+  }, [hasLiveStream, liveItem?.snippet?.title]);
 
   useEffect(() => {
     let active = true;
@@ -120,14 +129,14 @@ function HomeScreenContent({ startTour }: { startTour: () => void }) {
 
   const handleLiveInfoPress = () => {
     if (!hasLiveStream || !liveVideoId) {
-      Alert.alert(
+      AppAlert.alert(
         'No Live Stream',
         'There is no live YouTube stream at the moment. Check back shortly.',
       );
       return;
     }
 
-    Alert.alert(
+    AppAlert.alert(
       'Live Stream Ongoing',
       'A live YouTube stream is currently ongoing. Do you want to join now?',
       [

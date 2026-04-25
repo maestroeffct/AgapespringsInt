@@ -1,5 +1,6 @@
 import React from 'react';
-import { Alert, Linking, TouchableOpacity, View } from 'react-native';
+import { Linking, TouchableOpacity, View } from 'react-native';
+import { AppAlert } from '../AppAlert/AppAlert';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 import { AppText } from '../../components/AppText/AppText';
@@ -24,7 +25,7 @@ export function PlatformsRadioTab() {
   const openLive = async () => {
     const canOpen = await Linking.canOpenURL(RADIO_URL);
     if (!canOpen) {
-      Alert.alert('Invalid link', RADIO_URL);
+      AppAlert.alert('Invalid link', RADIO_URL);
       return;
     }
 

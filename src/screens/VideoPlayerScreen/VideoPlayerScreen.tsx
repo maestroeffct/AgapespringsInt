@@ -14,6 +14,7 @@ import YoutubePlayer from 'react-native-youtube-iframe';
 import { AppText } from '../../components/AppText/AppText';
 import { useTheme } from '../../theme/ThemeProvider';
 import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
+import { useVisibleItems } from '../../hooks/useVisibleItems';
 import {
   useGetLatestFromChannelQuery,
   useGetSermonVideosQuery,
@@ -40,6 +41,7 @@ export default function VideoPlayerScreen({ route, navigation }: Props) {
 
   const [playing, setPlaying] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('related');
+  const { subscribe, onViewableItemsChanged, viewabilityConfig } = useVisibleItems();
 
   const { data: latestData, isLoading: latestLoading } =
     useGetLatestFromChannelQuery({ maxResults: 50 });
@@ -175,11 +177,16 @@ export default function VideoPlayerScreen({ route, navigation }: Props) {
         {/* Related tab */}
         {activeTab === 'related' && (
           <FlatList
+            windowSize={3}
+            initialNumToRender={5}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
             data={isLoading ? [] : related}
             keyExtractor={(item: any, index) => getVideoId(item) ?? `row-${index}`}
             contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => {
+            renderItem={({ item, index }) => {
               const videoId = getVideoId(item);
+              const vKey = getVideoId(item) ?? `row-${index}`;
               const thumb =
                 item?.snippet?.thumbnails?.high?.url ??
                 item?.snippet?.thumbnails?.medium?.url ??
@@ -192,6 +199,9 @@ export default function VideoPlayerScreen({ route, navigation }: Props) {
                   <VideoCard
                     layout="horizontal"
                     full
+                    index={index}
+                    visibilityKey={vKey}
+                    subscribe={subscribe}
                     imageHeight={130}
                     title={item?.snippet?.title}
                     date={dateText}

@@ -354,9 +354,9 @@ export const oneSoundQueryOptions = (size = DEFAULT_ONESOUND_PAGE_SIZE) =>
   queryOptions({
     queryKey: queryKeys.oneSound(size),
     queryFn: async (): Promise<OneSoundItem[]> => fetchOneSoundPage(1, size),
-    staleTime: 1000 * 60 * 10,
-    gcTime: 1000 * 60 * 30,
-    refetchOnMount: false,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5,
+    refetchOnMount: true,
     refetchOnReconnect: true,
   });
 
@@ -369,6 +369,42 @@ export const oneSoundInfiniteQueryOptions = (
     queryFn: ({ pageParam }) => fetchOneSoundPage(pageParam, size),
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < size ? undefined : allPages.length + 1,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+  });
+
+type GivingAccountApiItem = {
+  id: number;
+  name: string;
+  bankName: string;
+  accountNumber: string;
+  accountHolderName: string;
+  currency: string;
+  category: 'tithe' | 'offering' | 'tithe_offering' | 'partnership' | 'impact' | 'kids_teens' | 'welfare' | 'special_meeting' | 'resources' | 'seed' | 'projects';
+  scope: 'global' | 'location';
+  locationId: number | null;
+  locationName: string | null;
+};
+
+type GivingAccountsApiResponse = {
+  success: boolean;
+  data: GivingAccountApiItem[];
+};
+
+export type GivingAccountItem = GivingAccountApiItem;
+
+export const givingAccountsQueryOptions = (locationId?: string) =>
+  queryOptions({
+    queryKey: queryKeys.givingAccounts(locationId),
+    queryFn: async (): Promise<GivingAccountItem[]> => {
+      const endpoint = locationId
+        ? `/giving-accounts/list?locationId=${locationId}`
+        : `/giving-accounts/list`;
+      const res = await apiGet<GivingAccountsApiResponse>(endpoint);
+      return res.data ?? [];
+    },
     staleTime: 1000 * 60 * 10,
     gcTime: 1000 * 60 * 30,
     refetchOnMount: false,

@@ -98,7 +98,7 @@ export function parseBibleReference(
   // Strip trailing translation code like "KJV", "BSB", "NIV", "NKJV"
   const withoutTranslation = stripped.replace(/\s+[A-Z]{2,6}$/, '').trim();
   const translationMatch = stripped.match(/\s+([A-Z]{2,6})$/);
-  const translation = translationMatch ? translationMatch[1] : 'BSB';
+  const translation = translationMatch ? translationMatch[1] : 'KJV';
 
   const match = withoutTranslation.match(
     /^((?:\d\s+)?[A-Za-z]+(?:\s+[A-Za-z]+)*)\s+(\d+):(\d+)(?:-(\d+))?$/,
@@ -201,8 +201,8 @@ export async function fetchBibleVerseText(
 ): Promise<FetchedVerse | null> {
   const { translation } = ref;
 
-  // 1. Try the requested translation on helloao.org (covers BSB and others they host)
-  if (translation !== 'BSB') {
+  // 1. Try the requested translation on helloao.org (covers KJV, BSB and others they host)
+  if (translation !== 'KJV') {
     const helloaoResult = await fetchFromHelloao(ref, translation);
     if (helloaoResult) return helloaoResult;
   }
@@ -214,6 +214,6 @@ export async function fetchBibleVerseText(
     if (bibleApiComResult) return bibleApiComResult;
   }
 
-  // 3. Fall back to BSB on helloao.org
-  return fetchFromHelloao(ref, 'BSB');
+  // 3. Fall back to KJV on helloao.org
+  return fetchFromHelloao(ref, 'KJV');
 }

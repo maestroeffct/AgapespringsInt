@@ -16,6 +16,7 @@ import { useTheme } from '../../theme/ThemeProvider';
 export function AppHeader({
   title,
   showLogo = true,
+  logoVariant = 'full',
   leftType = 'menu',
   onLeftPress,
   showInfoIcon = false,
@@ -106,10 +107,11 @@ export function AppHeader({
     return () => { ring1.stop(); ring2.stop(); };
   }, [infoIsActive, rippleOpacity, rippleScale, ripple2Opacity, ripple2Scale]);
 
-  // 🔁 Theme-aware logo
+  // Theme-aware logos
   const logo = isDark
     ? require('../../assets/images/logo_white.png')
     : require('../../assets/images/logo_name.png');
+  const logoIcon = require('../../assets/images/logo.png');
 
   const showRightBadge = rightType === 'notification' && badgeCount > 0;
 
@@ -233,7 +235,16 @@ export function AppHeader({
             )
           )}
 
-          {showLogo ? (
+          {showLogo && logoVariant === 'compact' ? (
+            <View style={styles.compactWrap}>
+              <Image source={logoIcon} style={styles.logoIconSmall} resizeMode="contain" />
+              {title && (
+                <AppText style={[styles.compactTitle, { color: headerIconColor }]}>
+                  {title}
+                </AppText>
+              )}
+            </View>
+          ) : showLogo ? (
             <View style={styles.logoWrap}>
               <Image source={logo} style={styles.logo} resizeMode="contain" />
             </View>

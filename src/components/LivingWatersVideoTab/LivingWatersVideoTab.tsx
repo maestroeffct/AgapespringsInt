@@ -13,6 +13,7 @@ import { useGetLatestFromChannelQuery } from '../../backend/api/youtube';
 import { SearchBar } from '../../components/SearchBar/SearchBar';
 import { FilterSheet } from '../../components/FilterSheet/FilterSheet';
 import { useNavigation } from '@react-navigation/native';
+import { useVisibleItems } from '../../hooks/useVisibleItems';
 import { useTheme } from '../../theme/ThemeProvider';
 
 const FILTER_SECTIONS = [
@@ -52,6 +53,7 @@ export function LivingWatersVideoTab() {
   const refetching = isFetching && !isLoading;
 
   const items = useMemo(() => data?.items ?? [], [data]);
+  const { subscribe, onViewableItemsChanged, viewabilityConfig } = useVisibleItems();
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -111,14 +113,19 @@ export function LivingWatersVideoTab() {
         </View>
       ) : (
         <FlatList
+          windowSize={3}
+          initialNumToRender={5}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
           data={filtered}
           keyExtractor={(item: any, index) =>
             getVideoId(item) ?? `video-${index}`
           }
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const snippet = item?.snippet;
             if (!snippet) return null;
             const videoId = getVideoId(item);
+            const vKey = getVideoId(item) ?? `video-${index}`;
             const thumbnail =
               snippet?.thumbnails?.maxres?.url ??
               snippet?.thumbnails?.high?.url ??
@@ -129,6 +136,9 @@ export function LivingWatersVideoTab() {
             return (
               <VideoCard
                 full
+                index={index}
+                visibilityKey={vKey}
+                subscribe={subscribe}
                 layout="horizontal"
                 imageHeight={130}
                 title={snippet?.title}

@@ -75,4 +75,6 @@ export type RootStackParamList = {
         source?: 'latest' | 'testimony' | 'broadcast';
       }
     | undefined;
+
+  Impact: undefined;
 };

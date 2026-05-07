@@ -1,29 +1,19 @@
-import { NativeModules, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
-type AppInfoModule = {
-  getVersion?: () => Promise<string>;
-  getBuildNumber?: () => Promise<string>;
+// Keep these in sync with:
+// iOS: ios/AgapespringsInt.xcodeproj/project.pbxproj → MARKETING_VERSION
+// Android: android/app/build.gradle → versionName
+const APP_VERSION = {
+  ios: '1.9.2',
+  android: '1.7',
 };
 
-const nativeAppInfo = NativeModules.AppInfo as AppInfoModule | undefined;
-
 export async function getInstalledAppVersion() {
-  const fallbackVersion = Platform.OS === 'ios' ? '1.7' : '1.0';
-
-  try {
-    const version = await nativeAppInfo?.getVersion?.();
-    return version?.trim() || fallbackVersion;
-  } catch {
-    return fallbackVersion;
-  }
+  return Platform.OS === 'ios' ? APP_VERSION.ios : APP_VERSION.android;
 }
 
 export async function getInstalledBuildNumber() {
-  try {
-    return (await nativeAppInfo?.getBuildNumber?.())?.trim() || '0';
-  } catch {
-    return '0';
-  }
+  return '0';
 }
 
 function normalizeVersionPart(part: string) {
@@ -31,7 +21,10 @@ function normalizeVersionPart(part: string) {
   return digits ? Number(digits) : 0;
 }
 
-export function compareVersions(currentVersion: string, minimumVersion: string) {
+export function compareVersions(
+  currentVersion: string,
+  minimumVersion: string,
+) {
   const currentParts = currentVersion.split('.');
   const minimumParts = minimumVersion.split('.');
   const length = Math.max(currentParts.length, minimumParts.length);

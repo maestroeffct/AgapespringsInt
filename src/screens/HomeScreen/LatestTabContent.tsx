@@ -63,7 +63,7 @@ export function LatestTabContent() {
           ? Array.from({ length: PLACEHOLDER_COUNT }).map((_, i) => (
               <VideoCard key={`video-placeholder-${i}`} />
             ))
-          : videoItems.map((item: any) => {
+          : videoItems.map((item: any, index: number) => {
               const videoId = getVideoId(item);
               const thumbnail =
                 item?.snippet?.thumbnails?.high?.url ??
@@ -73,6 +73,7 @@ export function LatestTabContent() {
               return (
                 <VideoCard
                   key={cardKey}
+                  index={index}
                   title={item?.snippet?.title}
                   thumbnail={thumbnail}
                   onPress={() =>

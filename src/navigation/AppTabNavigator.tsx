@@ -6,6 +6,7 @@ import HomeScreen from '../screens/HomeScreen/HomeScreen';
 import LivingWatersScreen from '../screens/LivingWaters/LivingWatersScreen';
 import DevotionalScreen from '../screens/Devotional/DevotionalScreen';
 import OneSoundScreen from '../screens/OneSound/OneSoundScreen';
+import GivingScreen from '../screens/GivingScreen/GivingScreen';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import {
   APP_TAB_BAR_HEIGHT,
@@ -24,6 +25,7 @@ export type TabParamList = {
   LivingWaters: undefined;
   Devotional: undefined;
   OneSound: undefined;
+  Giving: undefined;
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -31,7 +33,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 export function AppTabNavigator() {
   const { theme } = useTheme();
   const androidBottomInset =
-    Platform.OS === 'android' ? ANDROID_TAB_BAR_EXTRA_BOTTOM : 0;
+    Platform.OS === 'android' ? ANDROID_TAB_BAR_EXTRA_BOTTOM : 15;
 
   return (
     <Tab.Navigator
@@ -66,6 +68,9 @@ export function AppTabNavigator() {
             case 'OneSound':
               iconName = focused ? 'musical-notes' : 'musical-notes-outline';
               break;
+            case 'Giving':
+              iconName = focused ? 'wallet' : 'wallet-outline';
+              break;
           }
 
           return <Ionicons name={iconName} size={22} color={color} />;
@@ -75,6 +80,7 @@ export function AppTabNavigator() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="LivingWaters" component={LivingWatersScreen} />
       <Tab.Screen name="Devotional" component={DevotionalScreen} />
+      <Tab.Screen name="Giving" component={GivingScreen} />
       <Tab.Screen name="OneSound" component={OneSoundScreen} />
     </Tab.Navigator>
   );

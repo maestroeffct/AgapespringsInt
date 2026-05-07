@@ -155,7 +155,7 @@ export default function UpdateRequiredScreen({ route }: Props) {
               <AppText
                 font="poppins"
                 variant="body"
-                style={[styles.versionValue, { color: theme.colors.primary }]}
+                style={[styles.versionValue, { color: isDark ? '#FFFFFF' : theme.colors.primary }]}
               >
                 v{minimumVersion}
               </AppText>
@@ -274,7 +274,8 @@ const styles = StyleSheet.create({
   },
 
   message: {
-    lineHeight: 22,
+    lineHeight: 24,
+    fontSize: 15,
   },
 
   versionRow: {
@@ -287,8 +288,8 @@ const styles = StyleSheet.create({
   versionItem: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 14,
-    gap: 2,
+    paddingVertical: 18,
+    gap: 4,
   },
   versionDivider: {
     width: 1,
@@ -296,10 +297,11 @@ const styles = StyleSheet.create({
   versionLabel: {
     textTransform: 'uppercase',
     letterSpacing: 0.6,
-    fontSize: 10,
+    fontSize: 12,
   },
   versionValue: {
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: 20,
   },
 
   // footer

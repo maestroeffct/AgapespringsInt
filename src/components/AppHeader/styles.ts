@@ -80,6 +80,23 @@ export default StyleSheet.create({
     height: 38,
   },
 
+  compactWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  logoIconSmall: {
+    width: 28,
+    height: 28,
+  },
+
+  compactTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+
   logoText: {
     fontSize: 10,
     letterSpacing: 0.5,

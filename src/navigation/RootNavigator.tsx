@@ -27,6 +27,7 @@ import UpdateRequiredScreen from '../screens/UpdateRequired/UpdateRequiredScreen
 import DevotionalDetailsScreen from '../screens/DevotionalDetailsScreen/DevotionalDetailsScreen';
 import DevotionalByDateScreen from '../screens/DevotionalByDate/DevotionalByDateScreen';
 import NotificationDetailScreen from '../screens/NotificationDetail/NotificationDetailScreen';
+import ImpactScreen from '../screens/ImpactScreen/ImpactScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -192,6 +193,7 @@ export function RootNavigator() {
             component={NotificationDetailScreen}
             options={{ presentation: 'transparentModal', animation: 'none' }}
           />
+          <Stack.Screen name="Impact" component={ImpactScreen} />
         </Stack.Navigator>
       </NavigationContainer>
 

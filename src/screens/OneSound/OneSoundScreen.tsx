@@ -27,6 +27,7 @@ import { downloadAudioToAppStorage } from '../../helpers/audioDownload';
 import { AppText } from '../../components/AppText/AppText';
 import { AppAlert } from '../../components/AppAlert/AppAlert';
 import { showSuccess } from '../../helpers/toast';
+import { useVisibleItems } from '../../hooks/useVisibleItems';
 
 const PAGE_SIZE = 20;
 
@@ -46,9 +47,11 @@ const DEFAULT_FILTERS = { sort: 'az' };
 type ViewMode = 'list' | 'grid';
 
 export default function OneSoundScreen({ navigation }: any) {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const gridCardWidth = (width - 48) / 2; // 16px padding × 2 + 16px gap
+
+  const { subscribe, onViewableItemsChanged, viewabilityConfig } = useVisibleItems();
 
   const [search, setSearch] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
@@ -241,6 +244,9 @@ export default function OneSoundScreen({ navigation }: any) {
           isPlaying={playing}
           containerStyle={isGrid ? { width: gridCardWidth } : undefined}
           imageHeight={isGrid ? gridCardWidth : undefined}
+          index={index}
+          visibilityKey={item.id}
+          subscribe={subscribe}
           onPress={() =>
             navigation.navigate('AudioPlayer', {
               id: item.id,
@@ -259,13 +265,13 @@ export default function OneSoundScreen({ navigation }: any) {
       );
     },
     [
-      filteredData,
       gridCardWidth,
       handleAddToQueue,
       isPlayerPlaying,
       navigation,
       nowPlayingUrl,
       queueItems,
+      subscribe,
       viewMode,
     ],
   );
@@ -352,6 +358,8 @@ export default function OneSoundScreen({ navigation }: any) {
     <ScreenWrapper padded={false}>
       <AppHeader
         showLogo
+        logoVariant="compact"
+        title="One Sound"
         onLeftPress={() => navigation.openDrawer()}
         rightType="icon"
         rightIconName="save"
@@ -381,6 +389,10 @@ export default function OneSoundScreen({ navigation }: any) {
       ) : (
         <FlatList
           key={viewMode}
+          windowSize={3}
+          initialNumToRender={8}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
           data={filteredData}
           keyExtractor={item => item.id}
           numColumns={numColumns}

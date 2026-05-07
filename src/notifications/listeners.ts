@@ -11,7 +11,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from '../features/notifications/notificationsSlice';
-import { displayLocalNotification, ensureNotificationChannel } from './notifee';
+import { displayLocalNotification, displayLiveStreamNotification, ensureNotificationChannel } from './notifee';
 import {
   buildNotificationItem,
   loadStoredNotifications,
@@ -31,6 +31,13 @@ function toStringRecord(data?: FirebaseMessagingTypes.RemoteMessage['data']) {
 
 function toOptionalString(value: unknown) {
   return typeof value === 'string' ? value : undefined;
+}
+
+function hasContent(remoteMessage: FirebaseMessagingTypes.RemoteMessage) {
+  const title =
+    remoteMessage.notification?.title?.trim() ||
+    toOptionalString(remoteMessage.data?.title)?.trim();
+  return !!title;
 }
 
 export function buildRemoteNotificationItem(
@@ -87,29 +94,55 @@ export async function triggerTestNotification() {
 export async function handleForegroundRemoteMessage(
   remoteMessage: FirebaseMessagingTypes.RemoteMessage,
 ) {
+  if (!hasContent(remoteMessage)) return;
+
   const item = await persistAndDispatchRemoteMessage(remoteMessage);
 
   showSuccess(item.title, item.message);
 
-  await displayLocalNotification({
-    title: item.title,
-    body: item.message,
-    data: item.data,
-  });
-}
+  const type = (
+    remoteMessage.data?.type ??
+    remoteMessage.data?.targetUrl ??
+    remoteMessage.data?.target ??
+    ''
+  ).toLowerCase().trim();
 
-export async function handleBackgroundRemoteMessage(
-  remoteMessage: FirebaseMessagingTypes.RemoteMessage,
-) {
-  const item = buildRemoteNotificationItem(remoteMessage);
-  await upsertStoredNotification(item);
-
-  if (!remoteMessage.notification) {
+  if (type === 'live' || type === 'live_stream' || type === 'livingwaters') {
+    await displayLiveStreamNotification(item.title);
+  } else {
     await displayLocalNotification({
       title: item.title,
       body: item.message,
       data: item.data,
     });
+  }
+}
+
+export async function handleBackgroundRemoteMessage(
+  remoteMessage: FirebaseMessagingTypes.RemoteMessage,
+) {
+  if (!hasContent(remoteMessage)) return;
+
+  const item = buildRemoteNotificationItem(remoteMessage);
+  await upsertStoredNotification(item);
+
+  if (!remoteMessage.notification) {
+    const type = (
+      remoteMessage.data?.type ??
+      remoteMessage.data?.targetUrl ??
+      remoteMessage.data?.target ??
+      ''
+    ).toLowerCase().trim();
+
+    if (type === 'live' || type === 'live_stream' || type === 'livingwaters') {
+      await displayLiveStreamNotification(item.title);
+    } else {
+      await displayLocalNotification({
+        title: item.title,
+        body: item.message,
+        data: item.data,
+      });
+    }
   }
 }
 
@@ -130,16 +163,90 @@ export function navigateFromNotificationData(
   data?: Record<string, string>,
   item?: { title?: string; message?: string; imageUrl?: string; createdAt?: string },
 ) {
-  const type = data?.type;
+  const type = (data?.type ?? data?.targetUrl ?? data?.target ?? '').toLowerCase().trim();
   const screen = data?.screen;
 
-  if (screen === 'DevotionalByDate' || type === 'devotional') {
+  if (screen === 'DevotionalByDate') {
     nav.navigate('DevotionalByDate', { date: data?.date });
     return;
   }
-  if (type === 'live_stream') {
-    nav.navigate('Main');
-    return;
+
+  switch (type) {
+    case 'devotional':
+      nav.navigate('DevotionalByDate', { date: data?.date });
+      return;
+
+    case 'live':
+    case 'live_stream':
+    case 'livingwaters':
+      nav.navigate('Main', { screen: 'Tabs', params: { screen: 'LivingWaters' } } as any);
+      return;
+
+    case 'onesound':
+      nav.navigate('Main', { screen: 'Tabs', params: { screen: 'OneSound' } } as any);
+      return;
+
+    case 'giving':
+      nav.navigate('Main', { screen: 'Tabs', params: { screen: 'Giving' } } as any);
+      return;
+
+    case 'impact':
+      nav.navigate('Impact');
+      return;
+
+    case 'videolist':
+    case 'videos':
+      nav.navigate('VideoList');
+      return;
+
+    case 'audiolist':
+    case 'sermons':
+    case 'audio':
+      nav.navigate('AudioList');
+      return;
+
+    case 'testimony':
+    case 'testimonies':
+      nav.navigate('TestimonyList');
+      return;
+
+    case 'notifications':
+      nav.navigate('Notifications');
+      return;
+
+    case 'platforms':
+      nav.navigate('Main', { screen: 'Platforms' } as any);
+      return;
+
+    case 'churclocator':
+    case 'church_locator':
+    case 'locations':
+    case 'location':
+      nav.navigate('Main', { screen: 'ChurchLocator' } as any);
+      return;
+
+    case 'giveweb':
+    case 'give_web':
+    case 'give_online':
+      nav.navigate('Main', { screen: 'GiveWeb' } as any);
+      return;
+
+    case 'about':
+    case 'aboutweb':
+    case 'about_web':
+      nav.navigate('Main', { screen: 'AboutWeb' } as any);
+      return;
+
+    case 'home':
+      nav.navigate('Main', { screen: 'Tabs', params: { screen: 'Home' } } as any);
+      return;
+
+    case 'devotional_tab':
+      nav.navigate('Main', { screen: 'Tabs', params: { screen: 'Devotional' } } as any);
+      return;
+
+    default:
+      break;
   }
 
   // No specific target — show notification detail bottom sheet

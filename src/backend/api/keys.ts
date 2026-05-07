@@ -16,4 +16,5 @@ export const queryKeys = {
   devotionalMonthly: (year: number, month: number) =>
     ['devotional', 'monthly', year, month] as const,
   testimonies: ['testimonies'] as const,
+  givingAccounts: (locationId?: string) => ['giving-accounts', locationId ?? 'global'] as const,
 };

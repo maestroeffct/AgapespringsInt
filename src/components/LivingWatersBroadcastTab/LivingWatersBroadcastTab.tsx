@@ -6,6 +6,7 @@ import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
 import { useGetSermonVideosQuery } from '../../backend/api/youtube';
 import { SearchBar } from '../SearchBar/SearchBar';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useVisibleItems } from '../../hooks/useVisibleItems';
 
 export function LivingWatersBroadcastTab() {
   const { theme } = useTheme();
@@ -22,6 +23,7 @@ export function LivingWatersBroadcastTab() {
   const refetching = isFetching && !isLoading;
 
   const items = useMemo(() => data?.items ?? [], [data]);
+  const { subscribe, onViewableItemsChanged, viewabilityConfig } = useVisibleItems();
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -60,12 +62,17 @@ export function LivingWatersBroadcastTab() {
         </View>
       ) : (
         <FlatList
+          windowSize={3}
+          initialNumToRender={5}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
           data={filtered}
           keyExtractor={(item: any, index) =>
             getVideoId(item) ?? `broadcast-${index}`
           }
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const videoId = getVideoId(item);
+            const vKey = getVideoId(item) ?? `broadcast-${index}`;
             const thumbnail =
               item?.snippet?.thumbnails?.maxres?.url ??
               item?.snippet?.thumbnails?.high?.url ??
@@ -76,6 +83,9 @@ export function LivingWatersBroadcastTab() {
             return (
               <VideoCard
                 full
+                index={index}
+                visibilityKey={vKey}
+                subscribe={subscribe}
                 layout="horizontal"
                 imageHeight={130}
                 title={item?.snippet?.title}

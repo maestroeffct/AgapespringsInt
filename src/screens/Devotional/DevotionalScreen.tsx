@@ -9,10 +9,10 @@ export default function DevotionalScreen({ navigation }: any) {
     <ScreenWrapper padded={false}>
       <AppHeader
         showLogo
+        logoVariant="compact"
+        title="Devotional"
         onLeftPress={() => navigation.openDrawer()}
-        rightType={'none'}
-        // if your AppHeader supports right icon press:
-        // onRightPress={() => navigation.navigate('DevotionalDownloads')}
+        rightType="none"
       />
 
       <View style={{ flex: 1 }}>

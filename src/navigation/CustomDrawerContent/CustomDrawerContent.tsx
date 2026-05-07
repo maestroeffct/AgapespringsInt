@@ -19,6 +19,18 @@ const STORE_URLS = {
 };
 
 async function handleRateApp() {
+  // Android in-app review silently does nothing when quota is hit or app is
+  // not installed from the Play Store — go straight to the store URL.
+  if (Platform.OS === 'android') {
+    try {
+      await Linking.openURL(STORE_URLS.android);
+    } catch {
+      await Linking.openURL(STORE_URLS.androidFallback);
+    }
+    return;
+  }
+
+  // iOS — try native sheet first, fall back to App Store URL.
   const isAvailable = InAppReview.isAvailable();
   if (isAvailable) {
     try {
@@ -26,12 +38,10 @@ async function handleRateApp() {
       return;
     } catch {}
   }
-  const primary = Platform.OS === 'ios' ? STORE_URLS.ios : STORE_URLS.android;
-  const fallback = Platform.OS === 'ios' ? STORE_URLS.iosFallback : STORE_URLS.androidFallback;
   try {
-    await Linking.openURL(primary);
+    await Linking.openURL(STORE_URLS.ios);
   } catch {
-    await Linking.openURL(fallback);
+    await Linking.openURL(STORE_URLS.iosFallback);
   }
 }
 import {
@@ -97,17 +107,6 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           onPress={() => {
             props.navigation.closeDrawer();
             props.navigation.navigate('AboutWeb');
-          }}
-          theme={theme}
-          isDark={isDark}
-        />
-
-        <DrawerItem
-          icon="gift-outline"
-          label="Give"
-          onPress={() => {
-            props.navigation.closeDrawer();
-            props.navigation.navigate('GiveWeb');
           }}
           theme={theme}
           isDark={isDark}

@@ -84,6 +84,8 @@ function LivingWatersScreenContent({
     <ScreenWrapper padded={false}>
       <AppHeader
         showLogo
+        logoVariant="compact"
+        title="Living Waters"
         onLeftPress={() => navigation.openDrawer()}
         rightType="icon"
         rightIconName="save"

@@ -27,9 +27,15 @@ export function buildNotificationItem(params: {
   };
 }
 
+const MAX_NOTIFICATIONS = 50;
+const MAX_AGE_MS = 48 * 60 * 60 * 1000; // 48 hours
+
 export async function upsertStoredNotification(item: NotificationItem) {
   const existing = await loadStoredNotifications();
-  const next = [item, ...existing.filter(entry => entry.id !== item.id)];
+  const cutoff = Date.now() - MAX_AGE_MS;
+  const next = [item, ...existing.filter(n => n.id !== item.id)]
+    .filter(n => new Date(n.createdAt).getTime() >= cutoff)
+    .slice(0, MAX_NOTIFICATIONS);
   await saveStoredNotifications(next);
   return next;
 }

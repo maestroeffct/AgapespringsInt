@@ -8,6 +8,8 @@ import {
   ViewStyle,
   ActivityIndicator,
 } from 'react-native';
+
+type SubscribeFn = (cb: (keys: ReadonlySet<string>) => void) => () => void;
 import Ionicons from '@react-native-vector-icons/ionicons';
 
 import styles from './styles';
@@ -33,6 +35,9 @@ type AudioCardProps = {
   imageHeight?: number;
   containerStyle?: StyleProp<ViewStyle>;
   isPlaying?: boolean;
+  index?: number;
+  visibilityKey?: string;
+  subscribe?: SubscribeFn;
 };
 
 // ── Wave bar (one bar of the now-playing animation) ──────────────
@@ -73,8 +78,46 @@ export function AudioCard({
   imageHeight,
   containerStyle,
   isPlaying = false,
+  index = 0,
+  visibilityKey,
+  subscribe,
 }: AudioCardProps) {
   const { theme, isDark } = useTheme();
+
+  // Entrance animation
+  const translateY = useRef(new Animated.Value(subscribe ? 36 : 0)).current;
+  const opacity = useRef(new Animated.Value(subscribe ? 0 : 1)).current;
+  const scale = useRef(new Animated.Value(subscribe ? 0.93 : 1)).current;
+  const animRef = useRef<Animated.CompositeAnimation | null>(null);
+  const wasVisibleRef = useRef(false);
+  const hasAnimatedRef = useRef(false);
+
+  const animate = useRef(() => {
+    animRef.current?.stop();
+    translateY.setValue(36);
+    opacity.setValue(0);
+    scale.setValue(0.93);
+    const delay = (index % 4) * 55;
+    animRef.current = Animated.parallel([
+      Animated.timing(translateY, { toValue: 0, duration: 340, delay, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 290, delay, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, delay, useNativeDriver: true, damping: 16, stiffness: 130 }),
+    ]);
+    animRef.current.start();
+  }).current;
+
+  useEffect(() => {
+    if (!subscribe || !visibilityKey) return;
+    const unsub = subscribe(keys => {
+      const nowVisible = keys.has(visibilityKey);
+      if (nowVisible && !wasVisibleRef.current && !hasAnimatedRef.current) {
+        hasAnimatedRef.current = true;
+        animate();
+      }
+      wasVisibleRef.current = nowVisible;
+    });
+    return unsub;
+  }, [subscribe, visibilityKey, animate]);
   const remoteOpacity = useRef(new Animated.Value(0)).current;
   const [shouldRenderRemote, setShouldRenderRemote] = useState(false);
   const remoteThumbnailUri = getRemoteImageUri(thumbnail);
@@ -87,6 +130,7 @@ export function AudioCard({
   }, [remoteOpacity, remoteThumbnailUri]);
 
   return (
+    <Animated.View style={{ opacity, transform: [{ translateY }, { scale }] }}>
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={onPress}
@@ -236,5 +280,6 @@ export function AudioCard({
         </View>
       </View>
     </TouchableOpacity>
+    </Animated.View>
   );
 }

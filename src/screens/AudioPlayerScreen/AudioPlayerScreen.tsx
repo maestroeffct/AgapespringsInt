@@ -12,6 +12,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
+  PanResponder,
+  Dimensions,
   Modal,
   ScrollView,
   Text,
@@ -208,6 +210,35 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
   const swipeHintOpacity = useRef(new Animated.Value(0.6)).current;
   const swipeScrollRef = useRef<ScrollView>(null);
   const queueScrollRef = useRef<ScrollView>(null);
+
+  const slideY = useRef(new Animated.Value(0)).current;
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gs) =>
+        gs.dy > 10 && gs.dy > Math.abs(gs.dx),
+      onPanResponderMove: (_, gs) => {
+        slideY.setValue(Math.max(0, gs.dy));
+      },
+      onPanResponderRelease: (_, gs) => {
+        if (gs.dy > 120) {
+          Animated.timing(slideY, {
+            toValue: Dimensions.get('window').height,
+            duration: 240,
+            useNativeDriver: true,
+          }).start(() => {
+            slideY.setValue(0);
+            navigation.goBack();
+          });
+        } else {
+          Animated.spring(slideY, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 6,
+          }).start();
+        }
+      },
+    }),
+  ).current;
 
   const hasRemoteArtwork =
     typeof activeArtwork === 'string' &&
@@ -595,6 +626,10 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
             statusBarBackground="transparent"
             style={styles.screen}
           >
+      <Animated.View
+        style={[styles.bg, { transform: [{ translateY: slideY }] }]}
+        {...panResponder.panHandlers}
+      >
       <ImageBackground
         source={LOCAL_BACKGROUND}
         blurRadius={24}
@@ -957,6 +992,7 @@ export default function AudioPlayerScreen({ route, navigation }: any) {
         </View>
       </Modal>
       </ImageBackground>
+      </Animated.View>
           </ScreenWrapper>
         </>
       )}

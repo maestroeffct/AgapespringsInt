@@ -5,13 +5,14 @@ import { ScreenWrapper } from '../../components/Screenwrapper/Screenwrapper';
 import { AppHeader } from '../../components/AppHeader/AppHeader';
 import { VideoCard } from '../../components/Cards/VideoCard/VideoCard';
 import { useGetLatestFromChannelQuery } from '../../backend/api/youtube';
+import { useVisibleItems } from '../../hooks/useVisibleItems';
 import styles from './styles';
 
 const PLACEHOLDER_COUNT = 10;
 
 export default function VideoListScreen({ navigation }: any) {
   const { data, isLoading } = useGetLatestFromChannelQuery({
-    maxResults: 50, // load more for list page
+    maxResults: 50,
   });
   const getVideoId = (item: any): string | undefined =>
     item?.snippet?.resourceId?.videoId ??
@@ -19,6 +20,7 @@ export default function VideoListScreen({ navigation }: any) {
     item?.id?.videoId;
 
   const videoItems = data?.items ?? [];
+  const { subscribe, onViewableItemsChanged, viewabilityConfig } = useVisibleItems();
 
   return (
     <ScreenWrapper padded={false}>
@@ -30,6 +32,10 @@ export default function VideoListScreen({ navigation }: any) {
       />
 
       <FlatList
+        windowSize={3}
+        initialNumToRender={5}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         data={
           isLoading && videoItems.length === 0
             ? Array.from({ length: PLACEHOLDER_COUNT })
@@ -38,12 +44,13 @@ export default function VideoListScreen({ navigation }: any) {
         keyExtractor={(item: any, index) =>
           getVideoId(item) ?? `placeholder-${index}`
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           if (!item?.snippet) {
             return <VideoCard full />;
           }
 
           const videoId = getVideoId(item);
+          const vKey = getVideoId(item) ?? `placeholder-${index}`;
           const thumbnail =
             item.snippet.thumbnails.high?.url ??
             item.snippet.thumbnails.medium?.url;
@@ -51,6 +58,9 @@ export default function VideoListScreen({ navigation }: any) {
           return (
             <VideoCard
               full
+              index={index}
+              visibilityKey={vKey}
+              subscribe={subscribe}
               title={item.snippet.title}
               thumbnail={thumbnail}
               onPress={() =>

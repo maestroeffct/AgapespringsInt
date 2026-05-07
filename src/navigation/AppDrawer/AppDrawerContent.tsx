@@ -34,19 +34,22 @@ async function openStoreForReview() {
 }
 
 async function handleRateApp() {
-  const isAvailable = InAppReview.isAvailable();
+  // Android in-app review silently does nothing when the quota is hit or the
+  // app isn't installed from the Play Store — always open the store directly.
+  if (Platform.OS === 'android') {
+    await openStoreForReview();
+    return;
+  }
 
+  // iOS — prefer the native in-app sheet, fall back to App Store URL.
+  const isAvailable = InAppReview.isAvailable();
   if (isAvailable) {
     try {
       await InAppReview.RequestInAppReview();
-    } catch {
-      // Native dialog failed — fall back to store
-      await openStoreForReview();
-    }
-  } else {
-    // Device doesn't support in-app review — go straight to store
-    await openStoreForReview();
+      return;
+    } catch { /* fall through */ }
   }
+  await openStoreForReview();
 }
 
 export function AppDrawerContent(props: any) {
